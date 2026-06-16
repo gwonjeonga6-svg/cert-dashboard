@@ -155,18 +155,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Ne
     <input type="file" accept=".json" onchange="loadData(event)" style="display:none;">
   </label>
   <button class="btn btn-ghost" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
+  <button class="btn btn-ghost" onclick="exportWord()" id="wordBtn" style="display:none;">📄 Word 저장</button>
 </div>
 
 <!-- 업로드 화면 -->
-<div class="upload-zone" id="uploadZone" onclick="document.querySelector('#uploadZone input').click()"
+<div class="upload-zone" id="uploadZone"
   ondragover="event.preventDefault();this.classList.add('drag')"
   ondragleave="this.classList.remove('drag')"
   ondrop="event.preventDefault();this.classList.remove('drag');loadFile(event.dataTransfer.files[0])">
-  <input type="file" accept=".json" onchange="loadData(event)" style="display:none;">
   <div class="uz-icon">📊</div>
   <div class="uz-title">점수 입력 파일을 불러오세요</div>
   <div class="uz-sub">인증조사 통합평가시스템에서 저장한 JSON 파일을 업로드하면<br>보고용 대시보드가 자동으로 생성됩니다</div>
-  <button class="uz-btn" onclick="event.stopPropagation();this.parentElement.querySelector('input').click()">📂 파일 선택</button>
+  <label class="uz-btn" style="cursor:pointer;">
+    📂 파일 선택
+    <input type="file" accept=".json" onchange="loadData(event)" style="display:none;">
+  </label>
 </div>
 
 <!-- 헤더 (데이터 로드 후 표시) -->
@@ -618,7 +621,116 @@ function renderReport(d) {
         <td><span class="pill ${lv}">${txt}</span></td>
       </tr>`;
     }).join('');
-  }
+  // Word 버튼 표시
+  document.getElementById('wordBtn').style.display = 'inline-flex';
+}
+
+function exportWord(){
+  if(!reportData){ alert('먼저 JSON 파일을 불러오세요.'); return; }
+  const d = reportData;
+  const hn = d.hospitalName || '병원';
+  const savedAt = d.savedAt ? new Date(d.savedAt).toLocaleString('ko-KR') : '';
+  const totScore = d.totalScore || 0;
+  const totAvg = d.totalAvg || 10;
+  const CHAPTERS = [
+    {ch:'1',name:'환자안전'},{ch:'2',name:'진료전달체계'},{ch:'3',name:'환자진료'},
+    {ch:'4',name:'의약품관리'},{ch:'5',name:'수술·마취'},{ch:'6',name:'환자권리'},
+    {ch:'7',name:'질향상'},{ch:'8',name:'감염관리'},{ch:'9',name:'경영'},
+    {ch:'10',name:'인적관리'},{ch:'11',name:'시설환경'},{ch:'12',name:'의무기록'},{ch:'13',name:'성과관리'}
+  ];
+
+  // 인증 요건
+  const avgN = parseFloat(totAvg);
+  const chFail = (d.chData||[]).filter(c=>parseFloat(c.avg)<7).length;
+  const stdFail = 0; // 간소화
+  const reqDn = d.reqDnCount||0;
+  const canCert = avgN>=8 && chFail===0 && stdFail===0 && reqDn===0;
+
+  // 장별 테이블
+  const chRows = (d.chData||[]).map(c=>`
+    <tr>
+      <td>${c.ch}장 ${c.name}</td>
+      <td style="text-align:center;font-weight:bold;color:${parseFloat(c.avg)>=9?'#0e6b4f':parseFloat(c.avg)>=7?'#1a5fa8':'#b03030'}">${c.avg}점</td>
+      <td style="text-align:center">${c.tot}/${c.cnt*10}점</td>
+      <td style="text-align:center">${c.cnt-c.mid-c.dn}</td>
+      <td style="text-align:center;color:#8a5e00">${c.mid}</td>
+      <td style="text-align:center;color:#b03030">${c.dn}</td>
+      <td style="text-align:center">${parseFloat(c.avg)<7?'⚠ 미달':''}</td>
+    </tr>`).join('');
+
+  // 개선과제 테이블
+  const weakRows = (d.weakItems||[]).map((w,i)=>`
+    <tr>
+      <td style="text-align:center">${i+1}</td>
+      <td>기준 ${w.stdNum}</td>
+      <td style="text-align:center">ME.${w.me}</td>
+      <td>${w.text||'—'}</td>
+      <td style="text-align:center">${w.grade||'—'}</td>
+      <td style="text-align:center;font-weight:bold;color:${w.val==='dn'?'#b03030':'#8a5e00'}">${w.val==='dn'?'하':'중'}</td>
+      <td style="text-align:center;font-weight:bold">${w.score}점</td>
+      <td style="text-align:center;color:${w.grade==='필수'&&w.val==='dn'?'#b03030':'#8a5e00'}">${w.grade==='필수'&&w.val==='dn'?'🚨 즉시':w.val==='dn'?'⚠ 우선':'보통'}</td>
+    </tr>`).join('');
+
+  const html = `
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'>
+<style>
+  body{font-family:'맑은 고딕',Arial,sans-serif;font-size:11pt;margin:2cm 2cm;line-height:1.6;}
+  h1{font-size:18pt;color:#0f4080;border-bottom:2px solid #0f4080;padding-bottom:6px;margin-bottom:6px;}
+  h2{font-size:13pt;color:#1a5fa8;margin-top:20px;margin-bottom:8px;background:#eaf1fb;padding:4px 10px;border-left:4px solid #1a5fa8;}
+  table{border-collapse:collapse;width:100%;margin-bottom:14px;font-size:10pt;}
+  th{background:#1a5fa8;color:#fff;padding:6px 8px;text-align:left;font-weight:bold;}
+  td{border:1px solid #c4cad5;padding:5px 8px;vertical-align:top;}
+  tr:nth-child(even) td{background:#f5f6f8;}
+  .meta{font-size:10pt;color:#555;margin-bottom:16px;}
+  .cert-ok{background:#e5f4ee;color:#0e6b4f;padding:8px 14px;border-radius:4px;font-weight:bold;border-left:4px solid #0e6b4f;margin-bottom:12px;}
+  .cert-fail{background:#fdf0f0;color:#b03030;padding:8px 14px;border-radius:4px;font-weight:bold;border-left:4px solid #b03030;margin-bottom:12px;}
+  .req-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+  .req-item{border:1px solid #dde1e9;border-radius:4px;padding:8px 10px;text-align:center;}
+  .footer{margin-top:24px;font-size:9pt;color:#888;border-top:1px solid #dde1e9;padding-top:6px;text-align:right;}
+</style>
+</head>
+<body>
+<h1>4주기 의료기관 인증조사 점수 현황 보고서</h1>
+<div class="meta">
+  병원명: <strong>${hn||'미입력'}</strong> &nbsp;|&nbsp;
+  기준일: ${savedAt} &nbsp;|&nbsp;
+  총점: <strong>${totScore.toLocaleString()}점 / 5,050점</strong> &nbsp;|&nbsp;
+  평균: <strong>${totAvg}점</strong>
+</div>
+
+<h2>■ 인증 요건 판정</h2>
+<div class="${canCert?'cert-ok':'cert-fail'}">${canCert?'✅ 인증 요건 충족 — 모든 인증 요건을 충족합니다.':'❌ 인증 요건 미충족 — 아래 미충족 요건을 확인하세요.'}</div>
+<table>
+  <tr><th>요건</th><th>현재값</th><th>기준</th><th>판정</th></tr>
+  <tr><td>전체 평균점수</td><td>${totAvg}점</td><td>8.0점 이상</td><td>${avgN>=8?'✓ 충족':'✗ 미충족'}</td></tr>
+  <tr><td>장별 7점 미만</td><td>${chFail}개</td><td>0개</td><td>${chFail===0?'✓ 충족':'✗ 미충족'}</td></tr>
+  <tr><td>필수항목 하</td><td>${reqDn}개</td><td>0개</td><td>${reqDn===0?'✓ 충족':'✗ 탈락!'}</td></tr>
+</table>
+
+<h2>■ 장별 현황</h2>
+<table>
+  <tr><th>장</th><th>평균점수</th><th>총점</th><th>상</th><th>중</th><th>하</th><th>비고</th></tr>
+  ${chRows||'<tr><td colspan="7">데이터 없음</td></tr>'}
+</table>
+
+<h2>■ 개선과제 목록 (${(d.weakItems||[]).length}개)</h2>
+${(d.weakItems||[]).length===0
+  ?'<p style="color:#0e6b4f;font-weight:bold;">🎉 개선과제 없음 — 모든 항목 양호</p>'
+  :`<table>
+  <tr><th>#</th><th>기준</th><th>ME</th><th>항목 내용</th><th>등급</th><th>결과</th><th>점수</th><th>우선순위</th></tr>
+  ${weakRows}
+</table>`}
+
+<div class="footer">작성일: ${new Date().toLocaleDateString('ko-KR')} &nbsp;|&nbsp; QPS실 내선 9422 &nbsp;|&nbsp; 의료기관평가인증원 4주기 표준지침서 기준</div>
+</body></html>`;
+
+  const blob = new Blob(['\ufeff'+html],{type:'application/msword;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `인증조사_점수현황_${hn||'병원'}_${new Date().toISOString().slice(0,10)}.doc`;
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 </script>
 </body>
