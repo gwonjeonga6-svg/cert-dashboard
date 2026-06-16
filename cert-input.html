@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4주기 인증조사 통합 평가 시스템</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --blue:#1a5fa8;--blue-dk:#0f4080;--blue-lt:#eaf1fb;--blue-md:#c5d9f4;
+  --green:#0e6b4f;--green-lt:#e5f4ee;
+  --amber:#8a5e00;--amber-lt:#fdf5e0;
+  --red:#b03030;--red-lt:#fdf0f0;
+  --purple:#6d28d9;--purple-lt:#f3f0ff;
+  --orange:#c2410c;--orange-lt:#fff1ea;
+  --gray-50:#f5f6f8;--gray-100:#eceef2;--gray-200:#dde1e9;
+  --gray-300:#c4cad5;--gray-400:#9199a8;--gray-500:#6b7280;
+  --gray-700:#374151;--gray-900:#111827;
+  --radius:8px;--shadow:0 1px 4px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','맑은 고딕',sans-serif;background:var(--gray-50);color:var(--gray-900);font-size:14px;line-height:1.6;}
+
+/* 헤더 */
+.app-header{background:linear-gradient(135deg,#0f4080 0%,#1a5fa8 100%);color:#fff;padding:18px 28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.ah-left{flex:1;}
+.ah-title{font-size:20px;font-weight:800;letter-spacing:-.3px;}
+.ah-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-top:3px;}
+.ah-hospital{font-size:13px;font-weight:700;color:rgba(255,255,255,0.85);margin-top:2px;}
+.hospital-input{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;color:#fff;font-size:13px;font-weight:600;padding:5px 12px;font-family:inherit;outline:none;min-width:200px;}
+.hospital-input::placeholder{color:rgba(255,255,255,0.4);}
+.hospital-input:focus{background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.6);}
+.ah-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.hbtn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid transparent;font-family:inherit;transition:all .12s;white-space:nowrap;}
+.hbtn-ghost{background:rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.25);}
+.hbtn-ghost:hover{background:rgba(255,255,255,0.2);}
+.hbtn-white{background:#fff;color:var(--blue);border-color:#fff;}
+.hbtn-white:hover{background:#f0f7ff;}
+/* 푸터 */
+.app-footer{background:#0f4080;color:rgba(255,255,255,0.55);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;font-size:11px;flex-wrap:wrap;gap:8px;margin-top:auto;}
+.af-left{display:flex;align-items:center;gap:16px;}
+.af-contact{display:flex;align-items:center;gap:8px;}
+.af-phone{background:rgba(255,255,255,0.12);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;gap:5px;}
+.af-right{font-size:10px;color:rgba(255,255,255,0.35);}
+
+/* 탭 */
+.tab-bar{background:#fff;border-bottom:2px solid var(--gray-200);padding:0 24px;display:flex;gap:0;position:sticky;top:0;z-index:50;overflow-x:auto;}
+.tab-btn{padding:12px 20px;font-size:13px;font-weight:600;color:var(--gray-500);border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:6px;}
+.tab-btn:hover{color:var(--gray-900);}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+/* 위험 배너 */
+.danger-banner{background:#b03030;color:#fff;padding:9px 24px;font-size:13px;font-weight:700;display:none;align-items:center;gap:10px;}
+.danger-banner.show{display:flex;}
+.danger-banner button{margin-left:auto;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:4px;cursor:pointer;}
+
+/* 컨텐츠 */
+.tab-content{display:none;padding:24px 28px;max-width:1200px;}
+.tab-content.active{display:block;}
+
+/* 공통 카드 */
+.card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);}
+.card-title{font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.card-title .ct-icon{font-size:16px;}
+
+/* ── 탭1: 데이터 입력 ── */
+.input-layout{display:grid;grid-template-columns:200px 1fr;gap:16px;}
+.chapter-list{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);position:sticky;top:54px;max-height:calc(100vh - 80px);overflow-y:auto;}
+.cl-header{background:var(--blue-dk);color:#fff;padding:10px 14px;font-size:12px;font-weight:700;}
+.cl-btn{display:flex;align-items:center;gap:7px;padding:8px 12px;cursor:pointer;font-size:12px;color:var(--gray-700);border:none;background:none;width:100%;text-align:left;font-family:inherit;border-bottom:1px solid var(--gray-100);transition:background .1s;}
+.cl-btn:hover{background:var(--blue-lt);}
+.cl-btn.active{background:var(--blue-lt);color:var(--blue);font-weight:700;}
+.cl-num{font-size:10px;font-weight:700;background:var(--blue-lt);color:var(--blue);border-radius:3px;padding:1px 5px;flex-shrink:0;}
+.cl-btn.active .cl-num{background:var(--blue);color:#fff;}
+.cl-name{flex:1;}
+.cl-avg{font-size:11px;font-weight:700;}
+.cl-warn{font-size:11px;}
+
+.input-panel{}
+.ch-stat-bar{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:var(--shadow);}
+.csb-title{font-size:16px;font-weight:800;color:var(--gray-900);flex:1;}
+.csb-stat{text-align:center;padding:8px 14px;border-radius:6px;}
+.csb-stat .sv{font-size:20px;font-weight:900;}
+.csb-stat .sl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:1px;}
+.csb-blue{background:var(--blue-lt);color:var(--blue);}
+.csb-green{background:var(--green-lt);color:var(--green);}
+.csb-amber{background:var(--amber-lt);color:var(--amber);}
+.csb-red{background:var(--red-lt);color:var(--red);}
+
+.std-block{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow);}
+.std-hdr{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--gray-50);border-bottom:1px solid var(--gray-100);cursor:pointer;user-select:none;}
+.std-hdr:hover{background:var(--gray-100);}
+.std-num{font-size:11px;font-weight:700;background:var(--blue);color:#fff;border-radius:4px;padding:2px 8px;flex-shrink:0;}
+.std-title{font-size:13px;font-weight:700;color:var(--gray-900);flex:1;}
+.std-score{font-size:12px;font-weight:800;flex-shrink:0;}
+.std-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0;}
+.bg-ok{background:var(--green-lt);color:var(--green);}
+.bg-mid{background:var(--amber-lt);color:var(--amber);}
+.bg-dn{background:var(--red-lt);color:var(--red);}
+.std-tog{font-size:11px;color:var(--gray-400);flex-shrink:0;}
+.std-body{padding:10px 14px;}
+.std-body.collapsed{display:none;}
+
+.me-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;margin-bottom:3px;transition:background .1s;}
+.me-item:hover{background:var(--gray-50);}
+.me-item.danger-row{background:#fff5f5;outline:2px solid #fca5a5;outline-offset:-2px;}
+.me-num{font-size:10px;font-weight:700;color:var(--blue);background:var(--blue-lt);border-radius:3px;padding:1px 6px;flex-shrink:0;min-width:36px;text-align:center;}
+.me-grade{font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;flex-shrink:0;}
+.grade-req{background:#fee2e2;color:#b03030;}
+.grade-reg{background:var(--gray-100);color:var(--gray-500);}
+.grade-test{background:var(--purple-lt);color:var(--purple);}
+.me-type{font-size:10px;font-weight:700;width:20px;text-align:center;flex-shrink:0;border-radius:3px;padding:1px 2px;}
+.type-s{background:#dbeafe;color:#1d4ed8;}
+.type-p{background:#dcfce7;color:#166534;}
+.type-o{background:#fef9c3;color:#854d0e;}
+.me-text{flex:1;font-size:13px;color:var(--gray-900);}
+.score-btns{display:flex;gap:3px;flex-shrink:0;}
+.score-btn{padding:4px 10px;border:1.5px solid var(--gray-200);border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;background:#fff;font-family:inherit;transition:all .1s;color:var(--gray-400);}
+.score-btn:hover{border-color:var(--gray-400);color:var(--gray-700);}
+.sel-up{background:var(--green)!important;border-color:var(--green)!important;color:#fff!important;}
+.sel-mid{background:#d97706!important;border-color:#d97706!important;color:#fff!important;}
+.sel-dn{background:var(--red)!important;border-color:var(--red)!important;color:#fff!important;}
+
+/* ── 탭2: 종합현황 ── */
+.overview-top{display:grid;grid-template-columns:320px 1fr;gap:16px;margin-bottom:16px;}
+.score-gauge-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;}
+.gauge-title{font-size:12px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;}
+.gauge-wrap{position:relative;width:200px;height:110px;overflow:hidden;margin-bottom:10px;}
+.gauge-bg{width:200px;height:200px;border-radius:50%;background:conic-gradient(var(--gray-100) 0deg 180deg, transparent 180deg);position:absolute;top:0;left:0;}
+.gauge-fill{width:200px;height:200px;border-radius:50%;position:absolute;top:0;left:0;transition:background .8s;}
+.gauge-cover{width:140px;height:140px;background:#fff;border-radius:50%;position:absolute;top:30px;left:30px;}
+.gauge-val{position:absolute;bottom:8px;left:0;right:0;text-align:center;}
+.gauge-num{font-size:28px;font-weight:900;line-height:1;}
+.gauge-max{font-size:12px;color:var(--gray-400);}
+.gauge-pct{font-size:13px;font-weight:700;margin-top:4px;}
+.cert-req-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.cert-req-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);}
+.crc-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.crc-icon{font-size:20px;}
+.crc-title{font-size:12px;font-weight:700;color:var(--gray-700);}
+.crc-status{margin-left:auto;font-size:11px;font-weight:800;padding:3px 8px;border-radius:10px;}
+.status-ok{background:var(--green-lt);color:var(--green);}
+.status-fail{background:var(--red-lt);color:var(--red);}
+.crc-val{font-size:22px;font-weight:900;margin-bottom:2px;}
+.crc-desc{font-size:11px;color:var(--gray-500);}
+.crc-ok .crc-val{color:var(--green);}
+.crc-fail .crc-val{color:var(--red);}
+
+.overview-bottom{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.cert-result-bar{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;gap:16px;box-shadow:var(--shadow);flex-wrap:wrap;}
+.crb-badge{font-size:14px;font-weight:800;padding:8px 20px;border-radius:8px;}
+.crb-ok{background:var(--green-lt);color:var(--green);}
+.crb-fail{background:var(--red-lt);color:var(--red);}
+.crb-text{font-size:13px;color:var(--gray-700);flex:1;}
+
+.mini-stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.mini-stat{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);text-align:center;}
+.ms-val{font-size:26px;font-weight:900;}
+.ms-lbl{font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+.ms-sub{font-size:11px;color:var(--gray-400);margin-top:1px;}
+.ms-green .ms-val{color:var(--green);}
+.ms-amber .ms-val{color:var(--amber);}
+.ms-red .ms-val{color:var(--red);}
+.ms-blue .ms-val{color:var(--blue);}
+
+/* ── 탭3: 장별분석 ── */
+.chapter-analysis-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:16px;}
+.ch-analysis-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);}
+.cac-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.cac-num{font-size:10px;font-weight:700;background:var(--blue);color:#fff;border-radius:4px;padding:2px 7px;}
+.cac-name{font-size:13px;font-weight:700;color:var(--gray-900);flex:1;}
+.cac-score{font-size:16px;font-weight:900;}
+.cac-bar{height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden;margin-bottom:8px;}
+.cac-fill{height:100%;border-radius:4px;transition:width .5s;}
+.cac-stats{display:flex;gap:8px;}
+.cac-stat{font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.cac-stat.s-up{background:var(--green-lt);color:var(--green);}
+.cac-stat.s-mid{background:var(--amber-lt);color:var(--amber);}
+.cac-stat.s-dn{background:var(--red-lt);color:var(--red);}
+.cac-warn{font-size:10px;color:var(--red);font-weight:700;margin-top:4px;}
+.chart-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow);}
+.chart-title{font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:14px;}
+
+/* ── 탭4: 급등구간 ── */
+.risk-section{margin-bottom:20px;}
+.risk-section-title{font-size:14px;font-weight:800;color:var(--gray-900);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.risk-table{width:100%;border-collapse:collapse;font-size:13px;}
+.risk-table th{background:var(--gray-100);color:var(--gray-600);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--gray-200);}
+.risk-table td{padding:9px 12px;border-bottom:1px solid var(--gray-100);vertical-align:middle;}
+.risk-table tr:hover td{background:var(--gray-50);}
+.rt-std{font-size:10px;font-weight:700;background:var(--blue);color:#fff;border-radius:3px;padding:1px 6px;white-space:nowrap;}
+.rt-me{font-size:10px;font-weight:700;color:var(--blue);background:var(--blue-lt);border-radius:3px;padding:1px 5px;}
+.score-pill{font-size:11px;font-weight:800;padding:3px 9px;border-radius:10px;}
+.pill-mid{background:var(--amber-lt);color:var(--amber);}
+.pill-dn{background:var(--red-lt);color:var(--red);}
+.pill-req{background:#fee2e2;color:#b03030;border:1px solid #fca5a5;}
+.grade-pill{font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;}
+.gp-req{background:#fee2e2;color:#b03030;}
+.gp-reg{background:var(--gray-100);color:var(--gray-500);}
+.gp-test{background:var(--purple-lt);color:var(--purple);}
+
+/* ── 탭5: 개선과제 ── */
+.improve-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.filter-btns{display:flex;gap:6px;}
+.filter-btn{padding:5px 12px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-200);background:#fff;color:var(--gray-500);font-family:inherit;transition:all .12s;}
+.filter-btn.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+.improve-table{width:100%;border-collapse:collapse;font-size:13px;}
+.improve-table th{background:var(--gray-100);color:var(--gray-600);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:9px 12px;text-align:left;border-bottom:1px solid var(--gray-200);white-space:nowrap;}
+.improve-table td{padding:9px 12px;border-bottom:1px solid var(--gray-100);vertical-align:middle;}
+.improve-table tr:hover td{background:var(--gray-50);}
+.priority-badge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:4px;white-space:nowrap;}
+.pb-critical{background:#fee2e2;color:#b03030;}
+.pb-high{background:var(--amber-lt);color:var(--amber);}
+.pb-mid{background:var(--gray-100);color:var(--gray-500);}
+
+/* 팝업 */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;}
+.overlay.hidden{display:none;}
+.popup{background:#fff;border-radius:14px;padding:32px 36px;max-width:440px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,0.2);text-align:center;}
+.popup-icon{font-size:44px;margin-bottom:14px;}
+.popup-title{font-size:19px;font-weight:800;color:var(--red);margin-bottom:8px;}
+.popup-msg{font-size:13px;color:var(--gray-700);line-height:1.75;margin-bottom:22px;}
+.popup-msg strong{color:var(--red);}
+.popup-actions{display:flex;gap:10px;justify-content:center;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid transparent;font-family:inherit;transition:all .12s;white-space:nowrap;}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue);}
+.btn-ghost{background:#fff;color:var(--gray-500);border-color:var(--gray-200);}
+.btn-ghost:hover{background:var(--gray-50);}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--gray-900);color:#fff;font-size:12px;font-weight:600;padding:8px 18px;border-radius:20px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:300;}
+.toast.show{opacity:1;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--gray-400);}
+.empty-state .es-icon{font-size:48px;margin-bottom:12px;}
+.empty-state .es-text{font-size:15px;font-weight:700;color:var(--gray-700);}
+.empty-state .es-sub{font-size:13px;margin-top:4px;}
+
+@media print{
+  .tab-bar,.danger-banner,.score-btns,.hbtn,.filter-btns,.ah-right{display:none!important;}
+  .tab-content{display:block!important;padding:8px!important;}
+  .app-header{background:#0f4080!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{font-size:10pt;}
+  .std-block{break-inside:avoid;}
+  .std-body.collapsed{display:block!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="app-header">
+  <div class="ah-left">
+    <div class="ah-title">4주기 의료기관 인증조사 통합 평가 시스템</div>
+    <div class="ah-hospital">
+      <input class="hospital-input" id="hospitalName" placeholder="병원명을 입력하세요" oninput="autoSave()">
+    </div>
+    <div class="ah-sub">92기준 · 점수반영 505항목 · 만점 5,050점 | 필수항목 51개</div>
+  </div>
+  <div class="ah-right">
+    <button class="hbtn hbtn-ghost" onclick="resetAll()">↺ 초기화</button>
+    <button class="hbtn hbtn-ghost" onclick="saveJSON()">💾 저장</button>
+    <label class="hbtn hbtn-ghost" style="cursor:pointer;margin:0;">📂 불러오기<input type="file" accept=".json" onchange="loadJSON(event)" style="display:none;"></label>
+    <button class="hbtn hbtn-white" onclick="exportReport()">📊 보고용 내보내기</button>
+  </div>
+</div>
+
+<!-- 위험 배너 -->
+<div class="danger-banner" id="dangerBanner">
+  🚨 필수항목 "하" — 인증 탈락 위험! &nbsp;<span id="dangerMsg"></span>
+  <button onclick="goToTab('tab-input');setTimeout(scrollToReqFail,200)">해당 항목 보기 →</button>
+</div>
+
+<!-- 탭 바 -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="goToTab('tab-input')" id="btn-tab-input">📥 데이터 입력</button>
+  <button class="tab-btn" onclick="goToTab('tab-overview')" id="btn-tab-overview">📊 종합현황</button>
+  <button class="tab-btn" onclick="goToTab('tab-chapter')" id="btn-tab-chapter">📈 장별 분석</button>
+  <button class="tab-btn" onclick="goToTab('tab-risk')" id="btn-tab-risk">⚠ 급등 구간</button>
+  <button class="tab-btn" onclick="goToTab('tab-improve')" id="btn-tab-improve">✅ 개선과제</button>
+</div>
+
+<!-- ══════════════ 탭1: 데이터 입력 ══════════════ -->
+<div class="tab-content active" id="tab-input">
+  <div class="input-layout">
+    <div>
+      <div class="chapter-list" id="chapterList"></div>
+    </div>
+    <div id="inputPanel">
+      <div class="empty-state">
+        <div class="es-icon">📋</div>
+        <div class="es-text">좌측에서 장을 선택하세요</div>
+        <div class="es-sub">1장부터 순서대로 입력하거나 원하는 장을 바로 선택할 수 있습니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 탭2: 종합현황 ══════════════ -->
+<div class="tab-content" id="tab-overview">
+  <div id="overviewContent"></div>
+</div>
+
+<!-- ══════════════ 탭3: 장별분석 ══════════════ -->
+<div class="tab-content" id="tab-chapter">
+  <div id="chapterContent"></div>
+</div>
+
+<!-- ══════════════ 탭4: 급등구간 ══════════════ -->
+<div class="tab-content" id="tab-risk">
+  <div id="riskContent"></div>
+</div>
+
+<!-- ══════════════ 탭5: 개선과제 ══════════════ -->
+<div class="tab-content" id="tab-improve">
+  <div id="improveContent"></div>
+</div>
+
+<!-- 팝업 -->
+<div class="overlay hidden" id="alertOverlay">
+  <div class="popup">
+    <div class="popup-icon">🚨</div>
+    <div class="popup-title">인증 탈락 위험!</div>
+    <div class="popup-msg" id="alertMsg"></div>
+    <div class="popup-actions">
+      <button class="btn btn-ghost" onclick="closeAlert(true)">↩ 취소 (되돌리기)</button>
+      <button class="btn" style="background:var(--red);border-color:var(--red);color:#fff;" onclick="closeAlert(false)">⚠ 하로 유지</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- 푸터 -->
+<div class="app-footer">
+  <div class="af-left">
+    <span>4주기 의료기관 인증조사 통합 평가 시스템</span>
+    <div class="af-contact">
+      <div class="af-phone">📞 QPS실 &nbsp; 내선 9422</div>
+    </div>
+  </div>
+  <div class="af-right">의료기관평가인증원 4주기 표준지침서 기준</div>
+</div>
+
+<script>
+const DATA=[{"num": "1.1", "chapter": "1", "chapter_name": "환자안전", "title": "환자를 정확하게 확인한다.", "items": [{"me": 1, "text": "정확한 환자 확인에 대한 규정이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 2, "text": "의약품 투여 전에 환자를 정확하게 확인한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 3, "text": "혈액제제 투여 전에 환자를 정확하게 확인한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 4, "text": "검사 시행 전에 환자를 정확하게 확인한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 5, "text": "진료,처치 및 시술 전에 환자를 정확하게 확인한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}]}, {"num": "1.2", "chapter": "1", "chapter_name": "환자안전", "title": "의료진은 정확하게 의사소통한다.", "items": [{"me": 1, "text": "의료진의 정확한 의사소통에 대한 규정이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 2, "text": "구두처방을 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 3, "text": "필요시처방(p.r.n)을 관리한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 4, "text": "필요시처방(p.r.n)을 안전하게 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 5, "text": "혼동하기 쉬운 부정확한 처방 시 대처방안을 알고 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}]}, {"num": "1.3", "chapter": "1", "chapter_name": "환자안전", "title": "수술/시술 전 정확하게 확인한다.", "items": [{"me": 1, "text": "정확한 환자 확인, 정확한 수술/시술명, 정확한 수술/시술부위 확인에 대한 규정이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 2, "text": "수술/시술부위 표시에 환자가 참여한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 3, "text": "수술/시술부위를 표시한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 4, "text": "수술/시술 전 확인을 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 5, "text": "수술/시술 시작 직전, 수술/시술 팀원 간에 정확한 환자, 부위, 수술/시술 확인 절차를 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}]}, {"num": "1.4", "chapter": "1", "chapter_name": "환자안전", "title": "낙상 예방활동을 수행한다.", "items": [{"me": 1, "text": "낙상 예방에 대한 규정이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 2, "text": "낙상 위험 평가도구를 이용하여 환자 입원 시 초기평가를 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 3, "text": "낙상 위험 평가결과에 따라 고위험환자에 대한 낙상 예방활동을 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 4, "text": "낙상 위험 평가도구를 이용하여 환자 상태 변화 시 재평가를 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 5, "text": "낙상 발생 가능한 장소 또는 부서에서, 낙상 예방활동을 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}]}, {"num": "1.5", "chapter": "1", "chapter_name": "환자안전", "title": "손위생을 철저히 수행한다.", "items": [{"me": 1, "text": "손위생 수행에 대한 규정이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 2, "text": "손위생을 올바르게 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 3, "text": "손위생 수행을 돕기 위한 자원을 지원한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}]}, {"num": "2.1.1", "chapter": "2", "chapter_name": "진료전달체계", "title": "외래 및 응급환자의 등록 절차가 있다.", "items": [{"me": 1, "text": "외래환자 등록절차가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "외래환자 등록절차를 준수한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "응급환자 등록절차가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "응급환자 등록절차를 준수한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "2.1.2", "chapter": "2", "chapter_name": "진료전달체계", "title": "입원 수속 절차가 있다.", "items": [{"me": 1, "text": "입원 수속 절차가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "입원 순서배정에 따라 입실을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "입원이 지연되는 환자를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "입원 시 환자에게 입원생활 및 진료비용에 대해 설명한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "2.1.3", "chapter": "2", "chapter_name": "진료전달체계", "title": "중환자실 및 특수치료실 입실 절차가 있다.", "items": [{"me": 1, "text": "중환자실 입실 절차가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "중환자실 입실 전 환자 또는 보호자에게 필요성을 설명한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "중환자실 입실을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "특수치료실 입실 절차가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "특수치료실 입실 전 환자 또는 보호자에게 필요성을 설명한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "특수치료실 입실을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "2.1.4", "chapter": "2", "chapter_name": "진료전달체계", "title": "입원환자의 진료 책임자를 명확히 정하여 정보를 공유하며, 환자 상태변화를 조기에 인지하여 신속하게 대응한다.", "items": [{"me": 1, "text": "환자 책임 의사 지정 및 담당 의료진 변경 시 정보공유에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "전과 시 의무기록을 작성하여 환자 상태에 대한 정보를 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "전동 시 의무기록을 작성하여 환자 상태에 대한 정보를 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "근무교대 시 환자 상태에 대한 정보를 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "환자 상태변화 시 보고 체계를 구축하고 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "신속대응체계를 구축하고 운영한다.", "type": "P", "grade": "시범", "has_na": false, "is_yn": false}]}, {"num": "2.1.5", "chapter": "2", "chapter_name": "진료전달체계", "title": "퇴원, 전원 및 의뢰서비스를 제공한다.", "items": [{"me": 1, "text": "퇴원 및 전원 절차가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "퇴원 결정과정에 환자가 참여한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "퇴원 전에 퇴원요약지를 작성한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "퇴원 시 필요한 정보를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "퇴원 시 가정간호가 필요한 경우에는 관련 정보를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "전원 및 의뢰서비스를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "2.2.1", "chapter": "2", "chapter_name": "진료전달체계", "title": "외래환자의 요구를 확인하고 초기평가를 수행한다.", "items": [{"me": 1, "text": "외래환자 초기평가에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "타 의료기관에서 의뢰된 경우, 진료 관련 정보를 확인한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "의사는 외래환자 초기평가를 수행하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "의사는 외래 특수 환자의 초기평가를 수행하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "2.2.2", "chapter": "2", "chapter_name": "진료전달체계", "title": "입원환자의 요구를 확인하고 초기평가 및 재평가를 수행한다.", "items": [{"me": 1, "text": "입원환자 초기평가에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의학적 초기평가를 24시간 이내 수행하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "간호 초기평가를 24시간 이내 수행하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "영양 초기평가를 수행하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "특수 환자 초기평가를 24시간 이내 수행하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "입원환자의 의학적 재평가에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "입원환자의 의학적 재평가를 수행하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "환자평가 기록을 환자 진료를 담당하는 직원과 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "2.2.3", "chapter": "2", "chapter_name": "진료전달체계", "title": "응급환자의 요구를 확인하고 초기평가를 수행한다.", "items": [{"me": 1, "text": "응급환자 초기평가에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "응급환자를 분류하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "응급환자의 의학적 초기평가를 수행하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "응급환자의 간호 초기평가를 수행하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "응급환자의 초기평가 기록을 환자진료를 담당하는 직원과 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "2.3.1", "chapter": "2", "chapter_name": "진료전달체계", "title": "검체검사 운영과정을 관리한다.", "items": [{"me": 1, "text": "검체검사 운영에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "검체검사를 시행하는 직원은 적격한 자격이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "검체검사 결과를 판독하는 직원은 적격한 자격이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "검체를 안전하게 획득한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "정확한 검체검사를 위한 확인 절차를 준수한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "검사결과를 재확인할 수 있도록 검체를 보관한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "정도관리를 수행하고 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "검체검사 외부 의뢰체계를 적정하게 활용한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "2.3.2", "chapter": "2", "chapter_name": "진료전달체계", "title": "정확한 검체검사 결과를 제공한다.", "items": [{"me": 1, "text": "안전한 검체검사 결과보고 절차가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "정확하고 신속하게 검체검사 결과를 보고한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "검체검사의 이상결과를 보고한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "검체검사의 중간결과를 보고한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "보고된 검체검사 결과 변경 시 관련 의료진에게 즉시 보고한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "2.3.3", "chapter": "2", "chapter_name": "진료전달체계", "title": "검체검사실을 안전하게 관리한다.", "items": [{"me": 1, "text": "검체검사실 안전관리 절차가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "검체검사실 안전관리자가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "검체검사 안전관리에 대한 직원교육을 시행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "직원은 검체검사 관련 안전사고 보고체계를 알고 있다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "검체검사실의 감염 및 위험물질을 안전하게 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "2.3.4", "chapter": "2", "chapter_name": "진료전달체계", "title": "환자에게 적시에 안전한 혈액제제를 제공한다.", "items": [{"me": 1, "text": "안전한 혈액관리 절차가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "안전하고 적정한 혈액 사용을 위한 위원회를 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "안전하고 적정한 혈액 사용을 위한 부서 및 적격한 자가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "혈액제제를 안전하게 보관한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "수혈 전 검사와 환자 혈액검체를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "혈액제제의 불출, 반납, 재고, 폐기를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "2.3.5", "chapter": "2", "chapter_name": "진료전달체계", "title": "영상검사 운영과정을 관리한다.", "items": [{"me": 1, "text": "영상검사 운영에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "영상검사를 시행하는 직원은 적격한 자격이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "영상검사 결과를 판독하는 직원은 적격한 자격이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "상시적으로 영상검사를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "검사 전 준비사항을 확인한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "정확한 영상검사를 위한 확인 절차를 준수한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "정도관리를 수행하고 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "영상검사 외부 의뢰체계를 적정하게 활용한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "2.3.6", "chapter": "2", "chapter_name": "진료전달체계", "title": "정확한 영상검사 결과를 제공한다.", "items": [{"me": 1, "text": "안전한 영상검사 결과보고 절차가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "정확하고 신속하게 영상검사 결과를 보고한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "영상검사의 이상결과를 보고한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "보고된 영상검사 결과 변경 시 관련 의료진에게 즉시 보고한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "2.3.7", "chapter": "2", "chapter_name": "진료전달체계", "title": "방사선 안전관리 절차를 준수한다.", "items": [{"me": 1, "text": "방사선 안전관리 절차가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "방사선 안전관리를 수행하는 직원은 적격한 자격이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "방사선 안전관리에 대한 직원교육을 시행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "직원은 방사선 관련 안전사고 보고체계를 알고 있다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "방사선 안전관리 활동을 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "방사성물질을 안전하게 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "3.1.1", "chapter": "3", "chapter_name": "환자진료", "title": "적시에 치료계획(care plan)을 세우고 이를 수행한다.", "items": [{"me": 1, "text": "의사는 입원환자의 치료계획을 수립한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의사는 환자의 주요 상태변화 경과를 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "의사는 환자의 주요 상태변화에 따라 치료계획을 재수립한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "간호사는 환자의 주요 상태변화에 따라 간호과정을 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "환자 치료계획을 관련 직원들과 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "환자에게 치료계획을 설명한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "환자의 상태에 따라 퇴원계획을 수립한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "3.1.2", "chapter": "3", "chapter_name": "환자진료", "title": "진료과 간 협의진료를 수행한다.", "items": [{"me": 1, "text": "진료과 간 협의진료에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "협의진료를 의뢰한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "협의진료에 회신한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "3.1.3", "chapter": "3", "chapter_name": "환자진료", "title": "통증을 적절하게 관리한다.", "items": [{"me": 1, "text": "통증관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "외래환자 통증 초기평가를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "입원환자 통증 초기평가를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "통증평가 결과에 따라 통증을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "입원환자 상태변화 시 통증 재평가를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "3.1.4", "chapter": "3", "chapter_name": "환자진료", "title": "환자에게 영양을 적절하게 공급하고 관리한다.", "items": [{"me": 1, "text": "영양관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "환자의 치료목적에 맞게 식사를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "환자에게 치료식에 대해 설명한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "환자에게 영양 상담을 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "영양불량 위험환자를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "3.1.5", "chapter": "3", "chapter_name": "환자진료", "title": "영양집중지원서비스를 제공한다.", "items": [{"me": 1, "text": "영양집중지원관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "영양집중지원팀을 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "영양집중지원이 필요한 환자에게 적합한 치료계획을 수립한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "치료계획에 따라 영양집중지원서비스를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "영양집중지원 환자를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "3.1.6", "chapter": "3", "chapter_name": "환자진료", "title": "욕창예방 및 관리활동을 수행한다.", "items": [{"me": 1, "text": "욕창 예방관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "욕창 위험 평가도구를 이용하여 환자 입원 시 초기평가를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "욕창 위험 평가결과에 따라 고위험환자에 대한 욕창 예방활동을 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "욕창 위험 평가도구를 이용하여 정기적인 재평가를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "욕창이 발생한 환자에게 욕창 관리활동을 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "3.1.7", "chapter": "3", "chapter_name": "환자진료", "title": "말기환자 또는 임종과정에 있는 환자에게 호스피스·완화의료를 제공한다.", "items": [{"me": 1, "text": "호스피스·완화의료에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "호스피스·완화의료에 대한 정보를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "호스피스·완화의료팀을 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "환자상태에 따라 치료계획을 수립하고, 호스피스·완화의료를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "3.2.1", "chapter": "3", "chapter_name": "환자진료", "title": "중증응급환자에게 양질의 의료서비스를 제공한다.", "items": [{"me": 1, "text": "중증응급환자 진료에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의료진간 협력체계를 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "신속진료시스템(Fast Track)을 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "중증응급환자 이송서비스 관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "이송차량의 의약품 및 물품, 의료기기를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "이송서비스를 제공하는 직원은 적격한 자격이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "3.2.2", "chapter": "3", "chapter_name": "환자진료", "title": "심폐소생술이 요구되는 환자에게 양질의 의료서비스를 제공한다.", "items": [{"me": 1, "text": "심폐소생술에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "심폐소생술팀을 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "심폐소생술을 위한 필요물품 및 의약품을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "적시에 제세동기를 사용할 수 있다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "3.2.3", "chapter": "3", "chapter_name": "환자진료", "title": "수혈환자에게 양질의 의료서비스를 제공한다.", "items": [{"me": 1, "text": "안전한 수혈에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "불출된 혈액제제를 보관하고, 적절한 시간에 환자에게 수혈한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "수령한 혈액제제를 정확하게 확인한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "수혈 시 부작용 여부를 관찰하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "3.2.4", "chapter": "3", "chapter_name": "환자진료", "title": "항암화학요법 환자에게 양질의 의료서비스를 제공한다.", "items": [{"me": 1, "text": "항암화학요법에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "항암화학요법을 수행하는 직원은 적격한 자격이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "환자에게 항암화학요법에 대한 정보를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "항암제 조제 전 감사를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "안전하고 무균적으로 항암제를 조제한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "항암제를 안전하게 투여한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "항암화학요법 시 부작용 여부를 관찰하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "항암화학요법 후에 안전하게 폐기한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "3.2.5", "chapter": "3", "chapter_name": "환자진료", "title": "신체보호대와 격리․강박을 적절하고 안전하게 시행한다.", "items": [{"me": 1, "text": "신체보호대 사용에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "신체보호대를 적절하게 사용한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "격리 및 강박에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "격리 및 강박을 적절하게 시행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "4.1", "chapter": "4", "chapter_name": "의약품관리", "title": "의약품관리체계를 운영한다.", "items": [{"me": 1, "text": "의약품관리(약사)위원회를 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의약품관리(약사)위원회는 의약품관리 사업계획에 따라 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "의약품관리 사업계획에 따른 수행결과를 경영진에게 보고하고 관련 직원과 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "4.2", "chapter": "4", "chapter_name": "의약품관리", "title": "의약품을 적절하게 선정하고 확보한다.", "items": [{"me": 1, "text": "의약품 선정 및 확보에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의약품을 선정한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "의약품에 관한 정보를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "의약품을 적절하게 확보한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "4.3", "chapter": "4", "chapter_name": "의약품관리", "title": "의약품을 안전하게 보관한다.", "items": [{"me": 1, "text": "의약품 보관에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "모든 의약품을 안전하게 보관한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "모든 의약품의 보관 상태를 정기적으로 감사한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "응급의약품을 안전하게 보관한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "마약류를 안전하게 보관한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "고위험의약품을 안전하게 보관한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "주의를 요하는 의약품을 안전하게 보관한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "의약품을 안전하게 회수한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "4.4", "chapter": "4", "chapter_name": "의약품관리", "title": "의약품을 안전하게 처방하고 조제한다.", "items": [{"me": 1, "text": "의약품 처방 및 조제에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의약품을 안전하게 처방한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "적격한 자가 의약품 조제 전에 처방을 감사한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "적격한 자가 의약품을 안전하고 청결하게 조제한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "상시적으로 의약품을 조제한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "의약품 조제 환경을 안전하고 청결하게 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "주사용 의약품 취급의 감염 및 안전관리를 준수한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "의약품 조제 후 감사한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 9, "text": "의약품 조제 시 라벨링한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 10, "text": "의약품을 안전하게 운반한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "4.5", "chapter": "4", "chapter_name": "의약품관리", "title": "의약품을 안전하게 투여한다.", "items": [{"me": 1, "text": "의약품 투여에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의약품을 투여하는 직원은 적격한 자격이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "의약품 투여 시 필요한 정보를 확인하고 투여 후 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "고위험의약품 투여 시 주의사항 및 부작용 발생 시 대처 방안을 알고 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "투약 설명을 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "의약품 사용 후 안전하게 폐기한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "지참약을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "4.6", "chapter": "4", "chapter_name": "의약품관리", "title": "의약품부작용을 모니터링하고 관리한다.", "items": [{"me": 1, "text": "의약품부작용 모니터링에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의약품부작용을 모니터링하고, 발생 시 보고한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "의약품부작용 보고결과를 평가하고 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "의약품부작용 평가 및 관리결과를 경영진에게 보고하고 관련 직원과 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "5.1", "chapter": "5", "chapter_name": "수술·마취", "title": "수술 계획을 수립하고 수행한다.", "items": [{"me": 1, "text": "수술 전 평가를 기반으로 수술 계획을 수립한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "수술 전에 진단명을 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "수술실 퇴실 전에 수술에 대한 내용을 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "수술 후 평가를 기반으로 24시간 이내에 치료계획을 수립한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "수술 후 평가를 기반으로 간호계획을 수립한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "5.2", "chapter": "5", "chapter_name": "수술·마취", "title": "수술 시 환자의 안전을 보장한다.", "items": [{"me": 1, "text": "수술 시 환자안전 보장에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "수술 전·후 환자의 피부상태를 확인하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "수술계수(counts)를 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "관련 직원은 수술계수 불일치 시 대처하는 절차를 알고 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "수술 중 채취한 조직표본검체 취급에 대하여 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "5.3", "chapter": "5", "chapter_name": "수술·마취", "title": "시술 계획을 수립하고, 시술 시 환자안전을 보장한다.", "items": [{"me": 1, "text": "시술 전 평가를 기반으로 시술 계획을 수립한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "시술 전에 진단명을 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "시술실 퇴실 전에 시술에 대한 내용을 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "시술 후 평가를 기반으로 24시간 이내에 치료계획을 수립한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "시술 후 평가를 기반으로 간호계획을 수립한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "시술 시 환자안전 보장에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "시술 전‧후 환자의 피부상태를 확인하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "시술 중 채취한 조직표본검체 취급에 대하여 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "5.4", "chapter": "5", "chapter_name": "수술·마취", "title": "진정치료를 안전하게 수행한다.", "items": [{"me": 1, "text": "진정치료에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "진정치료를 수행하는 직원은 적격한 자격이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "진정 전 평가를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "진정치료 중인 환자를 모니터링하고, 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "5.5", "chapter": "5", "chapter_name": "수술·마취", "title": "마취진료를 안전하게 제공한다.", "items": [{"me": 1, "text": "마취진료에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "마취서비스를 제공하는 직원은 적격한 자격이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "마취 전 평가를 기반으로 마취진료 계획을 수립한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "마취 유도 직전 환자상태를 평가한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "상시적으로 마취서비스를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "5.6", "chapter": "5", "chapter_name": "수술·마취", "title": "마취진료를 제공받은 환자의 상태를 지속적으로 모니터링한다.", "items": [{"me": 1, "text": "마취 중 환자 상태를 모니터링하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "회복 중 환자 상태를 모니터링하고 기록한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "회복실 퇴실기준에 따라 적격한 자가 퇴실을 결정하고, 시행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "5.7", "chapter": "5", "chapter_name": "수술·마취", "title": "수술장을 안전하게 관리한다.", "items": [{"me": 1, "text": "수술장 안전관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "수술장의 구역을 구분하고 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "수술장 공기의 질을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "수술장 복장 및 보호구를 착용한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "수술장 출입을 제한하고 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "6.1", "chapter": "6", "chapter_name": "환자권리", "title": "환자의 권리를 존중하고, 안전을 보장한다.", "items": [{"me": 1, "text": "환자의 권리와 의무에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "직원은 환자의 권리와 의무를 알고 있다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "환자에게 환자의 권리와 의무에 대한 정보를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "진료과정에 환자가 참여한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "환자의 사생활보호 요구를 확인한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "환자의 신체노출을 보호한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "환자의 개인정보를 보호한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "6.2", "chapter": "6", "chapter_name": "환자권리", "title": "취약환자의 권리를 보호하고, 안전을 보장한다.", "items": [{"me": 1, "text": "취약환자의 권리 보호에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "직원은 학대 및 폭력피해자를 위한 보고 및 지원체계를 알고 있다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "직원은 신생아와 소아환자의 유괴를 예방하는 절차를 알고 있다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "직원은 의사소통이 어려운 환자를 위한 지원체계를 알고 있다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "직원은 장애환자의 편의를 위한 지원체계를 알고 있다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "6.3", "chapter": "6", "chapter_name": "환자권리", "title": "환자의 불만 및 고충을 관리한다.", "items": [{"me": 1, "text": "환자의 불만 및 고충 관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "환자에게 불만 및 고충 처리 절차에 대한 정보를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "불만 및 고충사항을 처리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "환자의 불만 및 고충 관리 결과를 지속적으로 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "환자의 불만 및 고충 관리 결과를 경영진에게 보고하고 관련 직원과 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "6.4", "chapter": "6", "chapter_name": "환자권리", "title": "의료사회복지체계를 수립하고 운영한다.", "items": [{"me": 1, "text": "의료사회복지체계가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "직원은 의료사회복지서비스 의뢰 가능대상 및 의뢰절차를 알고 있다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "의료사회복지서비스를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "지역사회 요구도를 반영한 의료사회복지서비스를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "6.5", "chapter": "6", "chapter_name": "환자권리", "title": "환자 또는 보호자에게 동의서를 받는다.", "items": [{"me": 1, "text": "진료동의서에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "수술 및 시술 동의서를 받는다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "마취 및 진정 동의서를 받는다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "혈액제제 사용동의서를 받는다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "고위험의약품 사용동의서를 받는다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "조영제 사용동의서를 받는다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "6.6", "chapter": "6", "chapter_name": "환자권리", "title": "임상연구를 안전하게 수행하고 관리한다.", "items": [{"me": 1, "text": "임상연구 관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "임상연구 목록을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "임상연구를 수행하고, 관리하는 직원은 적격한 자격이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "임상시험(심의)위원회를 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "임상연구 참여에 관한 정보를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "대상자에게 임상연구 동의서를 받는다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "이상반응 발생 시 보고하고 처리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "임상연구관련 자료의 기밀과 보안을 유지한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "6.7", "chapter": "6", "chapter_name": "환자권리", "title": "장기기증 및 이식과정을 관리한다.", "items": [{"me": 1, "text": "장기기증 및 이식과정에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "뇌사추정자 발생 시 신고절차를 준수한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "장기기증 및 이식과정에 대한 정보를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "장기기증 및 이식절차를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "장기기증 활성화를 위한 활동을 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "7.1", "chapter": "7", "chapter_name": "질향상", "title": "의료기관 차원의 질 향상과 환자안전을 위한 운영체계가 있다.", "items": [{"me": 1, "text": "의료기관 차원의 질 향상과 환자안전을 위한 위원회를 운영한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 2, "text": "의료기관 차원의 질 향상과 환자안전 활동을 수행하는 부서 및 적격한 자가 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 3, "text": "의료기관 차원의 질 향상과 환자안전 활동 계획이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 4, "text": "질 향상과 환자안전 교육계획이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 5, "text": "질 향상과 환자안전 활동을 위해 필요한 자원을 지원한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}]}, {"num": "7.2", "chapter": "7", "chapter_name": "질향상", "title": "의료기관 차원의 위험관리체계를 수립하고 관리한다.", "items": [{"me": 1, "text": "의료기관 차원의 위험관리체계가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "위험관리 영역에 따른 위험요인을 확인한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "위험요인에 대한 위험 정도를 평가하고 우선순위를 정한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "우선순위에 따라 선정된 위험요인을 분석하여 개선한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "개선활동 효과를 모니터링하고 평가한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "위험관리 활동 결과를 경영진에게 보고하고 관련 직원과 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "7.3", "chapter": "7", "chapter_name": "질향상", "title": "의료기관 차원의 환자안전사건을 관리한다.", "items": [{"me": 1, "text": "의료기관 차원의 환자안전사건 관리 절차가 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 2, "text": "직원은 환자안전사건의 정의를 알고 발생 시 보고한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 3, "text": "보고된 환자안전사건을 분석한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 4, "text": "분석결과에 따라 개선활동을 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 5, "text": "환자안전사건에 대한 결과를 경영진에게 보고하고 관련 직원과 공유한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 6, "text": "적신호사건 발생 시 환자와 보호자에게 관련 정보를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "환자안전 주의경보 발령 시 관련 직원과 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "7.4", "chapter": "7", "chapter_name": "질향상", "title": "의료기관의 질 향상 및 환자안전 활동을 수행한다.", "items": [{"me": 1, "text": "우선순위에 입각한 질 향상 활동 주제를 선정한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의료기관에서 선정한 질 향상 활동방법을 사용한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "선정된 주제에 따른 통계적 기법과 도구를 사용하여 자료를 분석한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "질 향상 활동을 통해 얻은 성과를 지속적으로 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "질 향상 활동성과를 경영진에게 보고하고 관련 직원과 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "7.5", "chapter": "7", "chapter_name": "질향상", "title": "진료지침을 개발하여 환자진료를 수행한다.", "items": [{"me": 1, "text": "진료지침 개발과 관리 계획이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "진료지침에 따라 환자진료를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "진료지침 활용성과를 지속적으로 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "진료지침 활용성과를 경영진에게 보고하고 관련 직원과 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "8.1", "chapter": "8", "chapter_name": "감염관리", "title": "의료기관 차원의 감염예방 및 관리체계를 운영한다.", "items": [{"me": 1, "text": "감염예방 및 관리에 대한 규정이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 2, "text": "의료기관 차원의 감염예방 및 관리를 위한 위원회를 운영한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 3, "text": "의료기관 차원의 감염예방 및 관리활동을 수행하는 부서 및 적격한 자가 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 4, "text": "부서별 감염관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "항생제 사용 관리체계를 갖추고 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "내성균 환자 관리체계를 갖추고 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "8.2", "chapter": "8", "chapter_name": "감염관리", "title": "감염예방 및 관리를 위한 프로그램을 운영한다.", "items": [{"me": 1, "text": "감염발생 감시프로그램이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "감염 위험평가를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "감염발생 감시활동 계획을 수립하고 감시활동을 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "감시활동 결과에 따른 개선활동 계획을 수립하고 개선활동을 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "감염발생 감시활동과 개선활동 결과를 경영진에게 보고하고 관련 직원과 공유한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "8.3", "chapter": "8", "chapter_name": "감염관리", "title": "감염관리 관련 교육을 시행한다.", "items": [{"me": 1, "text": "감염관리 관련 교육계획이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "감염관리 관련 교육을 시행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 3, "text": "상시출입자에 대한 감염관리 관련 교육 시행 여부를 확인한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "환자, 보호자에게 감염관리 관련 교육 또는 정보를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "8.4", "chapter": "8", "chapter_name": "감염관리", "title": "의료기구 관련 감염관리 활동을 수행한다.", "items": [{"me": 1, "text": "의료기구 관련 감염관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "호흡기 치료기구 관련 감염관리를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "유치도뇨관 관련 감염관리를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "혈관 내 카테터 관련 감염관리를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "8.5", "chapter": "8", "chapter_name": "감염관리", "title": "의료기구의 세척, 소독, 멸균과정과 세탁물을 적절히 관리한다.", "items": [{"me": 1, "text": "의료기구의 세척, 소독, 멸균과정에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "세척, 소독, 멸균 수행에 적절한 중앙공급실을 갖추고 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "사용한 의료기구의 세척, 소독, 멸균을 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "멸균기를 정기적으로 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "멸균물품을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "세탁물 관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "세탁물을 적절하게 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "8.6", "chapter": "8", "chapter_name": "감염관리", "title": "환자치료영역의 청소 및 소독을 수행하고, 환경을 관리한다.", "items": [{"me": 1, "text": "환자치료영역의 환경관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "환자치료영역의 청소 및 소독을 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "환자치료영역의 물과 의료기관 내 음용수를 적절하게 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "8.7", "chapter": "8", "chapter_name": "감염관리", "title": "급식서비스를 관리한다.", "items": [{"me": 1, "text": "입원환자 급식서비스 관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "식재료를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "조리기구 및 장비를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "조리장 환경을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "직원의 개인위생을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "8.8", "chapter": "8", "chapter_name": "감염관리", "title": "감염성질환자 및 면역저하 환자를 관리한다.", "items": [{"me": 1, "text": "감염성질환 관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "유행성 감염병 위기 상황 시 외래환자의 감염성질환 관리 절차를 준수한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "응급실 내원 환자의 감염성질환 관리 절차를 준수한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "감염병 전파경로에 따른 절차를 준수하여 환자를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "음압격리병실을 갖추고 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "보호격리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "보호격리가 필요한 환자를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "9.1", "chapter": "9", "chapter_name": "경영", "title": "경영진은 합리적 의사결정을 하고, 체계적인 계획 하에 의료기관을 운영한다.", "items": [{"me": 1, "text": "의료기관 운영에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의사결정조직(회의체)을 정기적으로 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "의사결정을 전달하는 조직(회의체)을 정기적으로 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "경영진은 교육에 관한 계획을 승인하고 결과에 대해 알고 있다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "경영진은 예산에 관한 계획을 승인하고 결과에 대해 알고 있다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "정책과 절차를 승인하는 조직(회의체)을 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "새로운 진료행위 도입을 승인하는 조직(회의체)을 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "경영진은 위탁서비스를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 9, "text": "의료기관이 제공하는 서비스에 대한 정보를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "9.2", "chapter": "9", "chapter_name": "경영", "title": "의료기관의 운영방향을 공유한다.", "items": [{"me": 1, "text": "미션과 핵심가치가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "미션과 핵심가치를 이행하기 위한 활동을 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "미션과 핵심가치를 공지한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "직원은 미션과 핵심가치를 알고 있다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "9.3", "chapter": "9", "chapter_name": "경영", "title": "부서장은 체계적으로 부서를 운영한다.", "items": [{"me": 1, "text": "부서장은 부서의 업무범위를 정의한다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "부서의 운영계획이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "부서 운영계획에 따라 업무를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "부서장은 업무수행 내용을 평가한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "9.4", "chapter": "9", "chapter_name": "경영", "title": "윤리위원회를 운영한다.", "items": [{"me": 1, "text": "진료 관련 윤리위원회를 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "직원의 윤리적 문제 관련 위원회를 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "10.1", "chapter": "10", "chapter_name": "인적관리", "title": "인사관리체계를 갖추고 적절히 운영한다.", "items": [{"me": 1, "text": "인사관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "인력 요구도를 확인한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "정기적으로 수립한 인사계획이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "직원을 모집한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "직원을 배치한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "직원만족도 향상을 위한 활동을 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "10.2", "chapter": "10", "chapter_name": "인적관리", "title": "의사(전문의)의 환자 진료 수행에 필요한 자격 요건과 진료권한을 관리한다.", "items": [{"me": 1, "text": "의사의 진료권한 승인 및 관리에 대한 규정이 있다.", "type": "S", "grade": "시범", "has_na": false, "is_yn": false}, {"me": 2, "text": "의사의 개별 진료권한에 대한 정의서가 있다.", "type": "S", "grade": "시범", "has_na": false, "is_yn": false}, {"me": 3, "text": "진료권한 정의서를 정기적으로 검토하고 재설계한다.", "type": "P", "grade": "시범", "has_na": false, "is_yn": false}, {"me": 4, "text": "진료권한 정의서에 의거하여 정기적으로 평가한다.", "type": "P", "grade": "시범", "has_na": false, "is_yn": false}, {"me": 5, "text": "평가결과를 경영진에게 보고하고 진료권한에 반영한다.", "type": "P", "grade": "시범", "has_na": false, "is_yn": false}]}, {"num": "10.3", "chapter": "10", "chapter_name": "인적관리", "title": "전문의를 제외한 모든 직원의 업무 수행에 필요한 자격 요건과 직무를 관리한다.", "items": [{"me": 1, "text": "직원의 자격 요건 및 직무 관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "직원의 자격 요건 및 직무에 대한 직무기술서가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "직무기술서를 정기적으로 검토하고 재설계한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "직무능력은 직무기술서에 의거하여 정기적으로 평가한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "직무능력 평가결과를 인력관리에 활용한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "10.4", "chapter": "10", "chapter_name": "인적관리", "title": "직원의 인사정보를 관리한다.", "items": [{"me": 1, "text": "인사정보 관리체계가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의사의 인사정보를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "간호사의 인사정보를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "기타 인력의 인사정보를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "10.5", "chapter": "10", "chapter_name": "인적관리", "title": "직원에게 지속적인 교육 및 훈련을 제공한다.", "items": [{"me": 1, "text": "직원 교육체계가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "직원의 교육 요구도를 확인한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "교육 요구도를 반영하여 수립한 교육계획이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "신규직원 교육을 시행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "직원의 직무수행에 필요한 필수교육을 시행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "직원의 직무수행에 필요한 특성화교육을 시행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "10.6", "chapter": "10", "chapter_name": "인적관리", "title": "의료인력의 법적 기준을 준수한다.", "items": [{"me": 1, "text": "의사인력 법적기준을 준수한다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "응급실 전담의사 법적기준을 준수한다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "간호인력 법적기준을 준수한다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "응급실 간호인력 법적기준을 준수한다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "중환자실 간호인력 법적기준을 준수한다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "기타 의료인력에 대한 법적기준을 준수한다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "10.7", "chapter": "10", "chapter_name": "인적관리", "title": "직원의 건강유지와 안전 관리활동을 수행한다.", "items": [{"me": 1, "text": "직원 건강유지 및 안전 관리활동에 대한 규정이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 2, "text": "직원 건강유지 및 안전 관리활동 계획이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 3, "text": "직원 건강유지 및 안전 관리활동을 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 4, "text": "직원 안전사고 관리에 대한 규정이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 5, "text": "직원 안전사고 발생 시 보고하고 치료 및 관리한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 6, "text": "직원 안전사고 처리결과를 경영진에게 보고한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}]}, {"num": "10.8", "chapter": "10", "chapter_name": "인적관리", "title": "폭력을 예방하고 올바른 조직문화를 구축한다.", "items": [{"me": 1, "text": "폭력 예방 및 관리체계가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "폭력 예방 및 관리 활동을 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "직원과 환자에게 폭력 상담 및 신고절차를 안내한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "11.1", "chapter": "11", "chapter_name": "시설환경", "title": "시설 및 환경안전 관리를 수행한다.", "items": [{"me": 1, "text": "시설 및 환경안전 관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "시설환경안전관리위원회를 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "시설 및 환경안전에 대한 계획이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "시설 및 환경안전 관리 업무 구분 및 책임자가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "시설 및 환경안전 관리에 대한 교육을 시행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "직원은 시설 및 환경안전 사고 발생 시 보고절차를 알고 있다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "시설 및 환경안전 사고 처리결과를 경영진에게 보고한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "시설 및 환경을 안전하게 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 9, "text": "의료기관 건물의 건축․보수․철거 전, 감염위험평가를 수행하고 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "11.2", "chapter": "11", "chapter_name": "시설환경", "title": "설비시스템을 안전하게 관리한다.", "items": [{"me": 1, "text": "설비시스템 관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "전기설비를 안전하게 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "급수설비 및 수질을 안전하게 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "의료가스 및 진공설비를 안전하게 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "실내공기질을 안전하게 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "11.3", "chapter": "11", "chapter_name": "시설환경", "title": "위험물질을 안전하게 관리한다.", "items": [{"me": 1, "text": "유해화학물질 관리 절차가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "유해화학물질을 안전하게 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "의료폐기물 관리 절차가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "의료폐기물을 안전하게 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "11.4", "chapter": "11", "chapter_name": "시설환경", "title": "보안체계를 갖추고 운영한다.", "items": [{"me": 1, "text": "환자안전 보안체계가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "통제구역을 지정하고 모니터링한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "보안사고 발생 시 보고한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "병문안객을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "11.5", "chapter": "11", "chapter_name": "시설환경", "title": "의료기기를 안전하게 관리한다.", "items": [{"me": 1, "text": "의료기기 관리 체계가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의료기기(심의)위원회를 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "의료기기를 관리하는 직원은 적격한 자격이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "의료기기 목록을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "의료기기 예방점검을 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "의료기기를 안전하게 회수한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "의료기기 오작동 및 안전사고 발생 시 적절하게 대처한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "의료기기 부작용 발생 시 보고하고 조치한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 9, "text": "고위험의료기기 운영 결과를 경영진에게 보고한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "11.6", "chapter": "11", "chapter_name": "시설환경", "title": "화재안전 관리 활동을 수행한다.", "items": [{"me": 1, "text": "화재안전 관리에 대한 규정이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 2, "text": "화재안전 관리 계획이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 3, "text": "화재예방점검을 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 4, "text": "소방훈련을 실시한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 5, "text": "소방안전 교육을 시행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 6, "text": "직원은 화재 발생 시 대응체계를 알고 있다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 7, "text": "금연관리에 대한 규정이 있다.", "type": "S", "grade": "필수", "has_na": false, "is_yn": false}, {"me": 8, "text": "금연관리를 수행한다.", "type": "P", "grade": "필수", "has_na": false, "is_yn": false}]}, {"num": "11.7", "chapter": "11", "chapter_name": "시설환경", "title": "재난관리체계를 갖추고 운영한다.", "items": [{"me": 1, "text": "재난관리체계가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "재난관리를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "모의훈련을 수행하고 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "11.8", "chapter": "11", "chapter_name": "시설환경", "title": "유행성 감염병 발생 상황에 대비한다.", "items": [{"me": 1, "text": "유행성 감염병 발생 시 대응을 위한 표준매뉴얼이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "유행성 감염병 발생을 인식하기 위한 경보체계가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "유행성 감염병 대응팀이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "유행성 감염병 진료지원 체계가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "대응체계 점검 및 재난훈련을 시행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "12.1", "chapter": "12", "chapter_name": "의무기록", "title": "의료정보/의무기록을 관리한다.", "items": [{"me": 1, "text": "의료정보/의무기록 관리에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의료정보/의무기록 관리 위원회를 운영한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "의료정보/의무기록을 관리하는 직원은 적격한 자격이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "의무기록 정정관리를 수행한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "의료정보/의무기록의 접근을 제한하고 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "의무기록 사본 발급을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "의무기록 대출, 열람 및 반납을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "금기약어 및 금기기호를 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 9, "text": "의무기록을 보관하고 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "12.2", "chapter": "12", "chapter_name": "의무기록", "title": "의무기록의 작성을 완결한다.", "items": [{"me": 1, "text": "의학적 초기평가 기록을 작성한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "간호 초기평가 기록을 작성한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "경과기록을 작성한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "간호기록을 작성한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "수술기록을 작성한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "시술기록을 작성한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "마취기록을 작성한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "동의서를 작성한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 9, "text": "전과기록을 작성한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 10, "text": "퇴원요약을 작성한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 11, "text": "표준화된 진단, 수술 및 처치코드를 사용한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "12.3", "chapter": "12", "chapter_name": "의무기록", "title": "의료정보의 수집, 생성 및 활용을 위한 체계를 운영한다.", "items": [{"me": 1, "text": "자료와 정보의 수집 및 활용에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "환자진료를 지원한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "교육, 연구 및 질 관리를 지원한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "경영관리를 지원한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "보건정책기관에 정보를 제공한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "12.4", "chapter": "12", "chapter_name": "의무기록", "title": "개인정보를 보호하고 안전하게 관리한다.", "items": [{"me": 1, "text": "개인정보 보호 및 보안에 대한 규정이 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "개인정보 보호 및 정보시스템 보안을 관리하는 적격한 자가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "개인정보 보안체계가 있다.", "type": "S", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "접근통제구역의 출입을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "정보시스템 접근통제 및 접근권한을 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "정보시스템 접속기록을 보관하고 관리한다.", "type": "P", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "13.1", "chapter": "13", "chapter_name": "성과관리", "title": "환자안전 지표를 관리한다.", "items": [{"me": 1, "text": "환자 확인 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "의사소통 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "수술, 시술 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "낙상 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "손위생 수행 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "욕창 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "13.2", "chapter": "13", "chapter_name": "성과관리", "title": "환자 진료영역의 지표를 관리한다.", "items": [{"me": 1, "text": "구두처방 관련 지표를 관리한다.", "type": "O", "grade": "시범", "has_na": false, "is_yn": false}, {"me": 2, "text": "감염 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "환자평가 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "협의진료 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "심폐소생술 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "진단검사 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 7, "text": "영상검사 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 8, "text": "병리검사 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 9, "text": "마취 및 진정 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 10, "text": "혈액제제 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 11, "text": "응급실 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 12, "text": "모성 및 신생아 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 13, "text": "사망률 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 14, "text": "의약품사용 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 15, "text": "의무기록 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}]}, {"num": "13.3", "chapter": "13", "chapter_name": "성과관리", "title": "의료기관 관리영역의 지표를 관리한다.", "items": [{"me": 1, "text": "이용도 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 2, "text": "재무관리 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 3, "text": "인사관리 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 4, "text": "직원교육 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 5, "text": "직원안전 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}, {"me": 6, "text": "환자만족도 관련 지표를 관리한다.", "type": "O", "grade": "정규", "has_na": false, "is_yn": false}]}];
+const MAX_SCORE=5050;
+const TOTAL_ITEMS=505;
+const REQUIRED=51;
+
+const scores={};
+let curCh=null, _pk=null,_pp=null,_ps=null,_pc=null;
+let chBarChart=null, chDistChart=null;
+
+// ─── 초기화 ───
+function initScores(){DATA.forEach(s=>s.items.forEach(i=>{if(!scores[s.num+'_'+i.me])scores[s.num+'_'+i.me]='up';}));}
+
+// ─── 점수 계산 (시범 제외) ───
+function getScore(k,grade){
+  if(grade==='시범') return null; // 시범은 점수 제외
+  const v=scores[k]||'up';
+  return v==='up'?10:v==='mid'?5:0;
+}
+function getScoreVal(k){const v=scores[k]||'up';return v==='up'?10:v==='mid'?5:0;}
+
+function getChStats(ch){
+  let tot=0,cnt=0,mid=0,dn=0,reqDn=0,trialDn=0;
+  DATA.filter(s=>s.chapter===ch).forEach(s=>s.items.forEach(i=>{
+    const k=s.num+'_'+i.me, v=scores[k]||'up';
+    if(i.grade!=='시범'){tot+=getScoreVal(k);cnt++;}
+    if(v==='mid') mid++;
+    if(v==='dn'){dn++;if(i.grade==='필수')reqDn++;if(i.grade==='시범')trialDn++;}
+  }));
+  return{avg:cnt>0?(tot/cnt).toFixed(1):'10.0',tot,cnt,mid,dn,reqDn,trialDn};
+}
+
+function getTotStats(){
+  let tot=0,cnt=0,mid=0,dn=0,reqDn=0;
+  DATA.forEach(s=>s.items.forEach(i=>{
+    const k=s.num+'_'+i.me, v=scores[k]||'up';
+    if(i.grade!=='시범'){tot+=getScoreVal(k);cnt++;}
+    if(v==='mid') mid++;
+    if(v==='dn'){dn++;if(i.grade==='필수')reqDn++;}
+  }));
+  return{avg:cnt>0?(tot/cnt).toFixed(1):'10.0',tot,cnt,mid,dn,reqDn,up:cnt-mid-dn};
+}
+
+function getCertStatus(){
+  const ts=getTotStats();
+  const avg=parseFloat(ts.avg);
+  const totalOk=avg>=8;
+  let stdFail=0;
+  DATA.forEach(s=>{
+    let t=0,c=0;
+    s.items.forEach(i=>{if(i.grade!=='시범'){t+=getScoreVal(s.num+'_'+i.me);c++;}});
+    if(c>0&&(t/c)<5) stdFail++;
+  });
+  const chs=[...new Set(DATA.map(s=>s.chapter))];
+  let chFail=0;
+  chs.forEach(ch=>{const st=getChStats(ch);if(parseFloat(st.avg)<7)chFail++;});
+  return{totalOk,totalAvg:avg,stdFail,chFail,reqDn:ts.reqDn};
+}
+
+// ─── 탭 전환 ───
+function goToTab(id){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('btn-'+id).classList.add('active');
+  if(id==='tab-overview') renderOverview();
+  else if(id==='tab-chapter') renderChapter();
+  else if(id==='tab-risk') renderRisk();
+  else if(id==='tab-improve') renderImprove('all');
+}
+
+// ─── 사이드 챕터 목록 ───
+function renderChapterList(){
+  const chs=[...new Set(DATA.map(s=>s.chapter))].sort((a,b)=>parseInt(a)-parseInt(b));
+  let html='<div class="cl-header">📋 장 선택</div>';
+  chs.forEach(ch=>{
+    const name=DATA.find(s=>s.chapter===ch)?.chapter_name||'';
+    const st=getChStats(ch);
+    const avg=parseFloat(st.avg);
+    const c=avg>=9?'var(--green)':avg>=7?'#d97706':'var(--red)';
+    const warn=st.reqDn>0?' 🚨':st.dn>0?' ⚠':'';
+    html+=`<button class="cl-btn ${curCh===ch?'active':''}" onclick="showInputChapter('${ch}')">
+      <span class="cl-num">${ch}장</span>
+      <span class="cl-name">${name}</span>
+      ${warn?`<span class="cl-warn">${warn}</span>`:''}
+      <span class="cl-avg" style="color:${c}">${st.avg}</span>
+    </button>`;
+  });
+  document.getElementById('chapterList').innerHTML=html;
+}
+
+// ─── 입력 탭: 장 내용 ───
+function showInputChapter(ch){
+  curCh=ch;
+  const stds=DATA.filter(s=>s.chapter===ch);
+  const name=stds[0]?.chapter_name||'';
+  const st=getChStats(ch);
+  const maxPts=st.cnt*10;
+  let html=`<div class="ch-stat-bar">
+    <div class="csb-title">${ch}장 &nbsp; ${name}</div>
+    <div class="csb-stat csb-blue"><div class="sv">${st.avg}점</div><div class="sl">장 평균</div></div>
+    <div class="csb-stat csb-blue"><div class="sv">${st.tot}<span style="font-size:12px;font-weight:500">/${maxPts}</span></div><div class="sl">장 총점</div></div>
+    <div class="csb-stat csb-green"><div class="sv">${st.cnt-st.mid-st.dn}</div><div class="sl">상</div></div>
+    <div class="csb-stat csb-amber"><div class="sv">${st.mid}</div><div class="sl">중</div></div>
+    <div class="csb-stat csb-red"><div class="sv">${st.dn}</div><div class="sl">하</div></div>
+  </div>`;
+  stds.forEach(s=>{
+    let tot=0,cnt=0,hasMid=false,hasDn=false;
+    s.items.forEach(i=>{
+      if(i.grade!=='시범'){tot+=getScoreVal(s.num+'_'+i.me);cnt++;}
+      const v=scores[s.num+'_'+i.me]||'up';
+      if(v==='mid')hasMid=true;
+      if(v==='dn')hasDn=true;
+    });
+    const avg=cnt>0?(tot/cnt).toFixed(1):'10.0';
+    const avgN=parseFloat(avg);
+    const sc=avgN>=9?'var(--green)':avgN>=5?'#d97706':'var(--red)';
+    const bc=hasDn?'bg-dn':hasMid?'bg-mid':'bg-ok';
+    const bt=hasDn?'하 포함':hasMid?'중 포함':'✓ 양호';
+    html+=`<div class="std-block">
+      <div class="std-hdr" onclick="toggleStd(this)">
+        <span class="std-num">기준 ${s.num}</span>
+        <span class="std-title">${s.title}</span>
+        <span class="std-score" style="color:${sc}">${avg}점</span>
+        <span class="std-badge ${bc}">${bt}</span>
+        <span class="std-tog">▼</span>
+      </div>
+      <div class="std-body" id="sb_${s.num.replace(/\./g,'_')}">`;
+    s.items.forEach(i=>{
+      const k=s.num+'_'+i.me;
+      const cur=scores[k]||'up';
+      const tc=i.type==='S'?'type-s':i.type==='P'?'type-p':'type-o';
+      const gc=i.grade==='필수'?'grade-req':i.grade==='시범'?'grade-test':'grade-reg';
+      const isDanger=i.grade==='필수'&&cur==='dn';
+      const isTrial=i.grade==='시범';
+      html+=`<div class="me-item${isDanger?' danger-row':''}" id="me_${k.replace(/\./g,'_')}">
+        <span class="me-num">ME.${i.me}</span>
+        <span class="me-grade ${gc}">${i.grade}</span>
+        <span class="me-type ${tc}">${i.type}</span>
+        <span class="me-text">${i.text}${isTrial?' <span style="font-size:10px;color:var(--purple);font-weight:600;">(점수 미반영)</span>':''}</span>
+        <div class="score-btns">
+          <button class="score-btn ${cur==='up'?'sel-up':''}" onclick="setScore('${k}','up','${s.num}','${ch}')">상 10점</button>
+          <button class="score-btn ${cur==='mid'?'sel-mid':''}" onclick="setScore('${k}','mid','${s.num}','${ch}')">중 5점</button>
+          <button class="score-btn ${cur==='dn'?'sel-dn':''}" onclick="setScore('${k}','dn','${s.num}','${ch}')">하 0점</button>
+        </div>
+      </div>`;
+    });
+    html+=`</div></div>`;
+  });
+  document.getElementById('inputPanel').innerHTML=html;
+  renderChapterList();
+  updateDangerBanner();
+}
+
+function toggleStd(hdr){
+  const body=hdr.nextElementSibling;
+  const tog=hdr.querySelector('.std-tog');
+  body.classList.toggle('collapsed');
+  tog.textContent=body.classList.contains('collapsed')?'▶':'▼';
+}
+
+// ─── 점수 설정 ───
+function setScore(k,val,stdNum,ch){
+  const std=DATA.find(s=>s.num===stdNum);
+  const item=std?.items.find(i=>(stdNum+'_'+i.me)===k);
+  if(val==='dn'&&item?.grade==='필수'){
+    _pk=k;_pp=scores[k]||'up';_ps=stdNum;_pc=ch;
+    document.getElementById('alertMsg').innerHTML=`<strong>기준 ${stdNum} ME.${item.me}</strong><br>"${item.text}"<br><br>이 항목은 <strong>필수항목</strong>입니다.<br>"하" 선택 시 <strong>필수항목 하 → 인증 탈락</strong> 조건에 해당합니다.`;
+    document.getElementById('alertOverlay').classList.remove('hidden');
+    return;
+  }
+  applyScore(k,val,stdNum,ch);
+}
+
+function closeAlert(revert){
+  document.getElementById('alertOverlay').classList.add('hidden');
+  applyScore(_pk,revert?_pp:'dn',_ps,_pc);
+  _pk=_pp=_ps=_pc=null;
+}
+
+function applyScore(k,val,stdNum,ch){
+  scores[k]=val;
+  const el=document.getElementById('me_'+k.replace(/\./g,'_'));
+  if(el){
+    el.querySelectorAll('.score-btn').forEach(btn=>{
+      btn.className='score-btn';
+      const t=btn.textContent;
+      if(t.startsWith('상')&&val==='up')btn.classList.add('sel-up');
+      else if(t.startsWith('중')&&val==='mid')btn.classList.add('sel-mid');
+      else if(t.startsWith('하')&&val==='dn')btn.classList.add('sel-dn');
+    });
+    const std=DATA.find(s=>s.num===stdNum);
+    const item=std?.items.find(i=>(stdNum+'_'+i.me)===k);
+    if(item?.grade==='필수'&&val==='dn')el.classList.add('danger-row');
+    else el.classList.remove('danger-row');
+  }
+  updateStdHeader(stdNum);
+  updateChStatBar(ch);
+  renderChapterList();
+  updateDangerBanner();
+  autoSave();
+}
+
+function updateStdHeader(stdNum){
+  const s=DATA.find(x=>x.num===stdNum);
+  if(!s)return;
+  let tot=0,cnt=0,hasMid=false,hasDn=false;
+  s.items.forEach(i=>{
+    if(i.grade!=='시범'){tot+=getScoreVal(s.num+'_'+i.me);cnt++;}
+    const v=scores[s.num+'_'+i.me]||'up';
+    if(v==='mid')hasMid=true;
+    if(v==='dn')hasDn=true;
+  });
+  const avg=cnt>0?(tot/cnt).toFixed(1):'10.0';
+  document.querySelectorAll('.std-block').forEach(block=>{
+    if(block.querySelector('.std-num')?.textContent==='기준 '+stdNum){
+      const sc=block.querySelector('.std-score');
+      if(sc){sc.textContent=avg+'점';sc.style.color=parseFloat(avg)>=9?'var(--green)':parseFloat(avg)>=5?'#d97706':'var(--red)';}
+      const bd=block.querySelector('.std-badge');
+      if(bd){bd.className='std-badge '+(hasDn?'bg-dn':hasMid?'bg-mid':'bg-ok');bd.textContent=hasDn?'하 포함':hasMid?'중 포함':'✓ 양호';}
+    }
+  });
+}
+
+function updateChStatBar(ch){
+  const st=getChStats(ch);
+  const maxPts=st.cnt*10;
+  const svEls=document.querySelectorAll('.csb-stat .sv');
+  if(svEls.length>=5){
+    svEls[0].textContent=st.avg+'점';
+    svEls[1].innerHTML=`${st.tot}<span style="font-size:12px;font-weight:500">/${maxPts}</span>`;
+    svEls[2].textContent=st.cnt-st.mid-st.dn;
+    svEls[3].textContent=st.mid;
+    svEls[4].textContent=st.dn;
+  }
+}
+
+function updateDangerBanner(){
+  const ts=getTotStats();
+  const banner=document.getElementById('dangerBanner');
+  const msg=document.getElementById('dangerMsg');
+  if(ts.reqDn>0){banner.classList.add('show');msg.textContent=`필수항목 하 ${ts.reqDn}개 — 즉시 확인 필요`;}
+  else banner.classList.remove('show');
+}
+
+function scrollToReqFail(){
+  const first=document.querySelector('.me-item.danger-row');
+  if(first)first.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// ─── 탭2: 종합현황 ───
+function renderOverview(){
+  const ts=getTotStats();
+  const cert=getCertStatus();
+  const canCert=cert.totalOk&&cert.stdFail===0&&cert.chFail===0&&cert.reqDn===0;
+  const pct=Math.round((ts.tot/MAX_SCORE)*100);
+  const avgN=parseFloat(ts.avg);
+  const gaugeColor=avgN>=9?'#0e6b4f':avgN>=8?'#1a5fa8':avgN>=7?'#d97706':'#b03030';
+  const gaugeDeg=Math.round((ts.tot/MAX_SCORE)*180);
+  const hospitalName=document.getElementById('hospitalName')?.value||'';
+
+  let html=`
+  ${hospitalName?`<div style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:14px;">📋 ${hospitalName} — 4주기 인증조사 점수 현황</div>`:''}
+  
+  <!-- 인증 결과 배너 -->
+  <div class="cert-result-bar">
+    <div class="crb-badge ${canCert?'crb-ok':'crb-fail'}">${canCert?'✅ 인증 요건 충족':'❌ 인증 요건 미충족'}</div>
+    <div class="crb-text">${canCert
+      ?'현재 점수 기준으로 모든 인증 요건을 충족합니다. 중/하 항목을 지속적으로 관리하세요.'
+      :'미충족 요건이 있습니다. 아래 인증 4대 요건을 확인하고 개선과제 탭에서 우선순위를 확인하세요.'
+    }</div>
+    <div style="font-size:12px;color:var(--gray-400);">기준일: ${new Date().toLocaleDateString('ko-KR')}</div>
+  </div>
+
+  <!-- 총점 게이지 + 4대 요건 -->
+  <div class="overview-top">
+    <div class="score-gauge-card">
+      <div class="gauge-title">총 점수 현황</div>
+      <div class="gauge-wrap">
+        <div class="gauge-bg"></div>
+        <div class="gauge-fill" style="background:conic-gradient(${gaugeColor} 0deg ${gaugeDeg}deg, var(--gray-100) ${gaugeDeg}deg 180deg, transparent 180deg);"></div>
+        <div class="gauge-cover"></div>
+        <div class="gauge-val">
+          <div class="gauge-num" style="color:${gaugeColor}">${ts.tot.toLocaleString()}</div>
+          <div class="gauge-max">/ ${MAX_SCORE.toLocaleString()}점</div>
+        </div>
+      </div>
+      <div class="gauge-pct" style="color:${gaugeColor}">${pct}% 달성 &nbsp;·&nbsp; 평균 ${ts.avg}점</div>
+      <div style="margin-top:12px;width:100%;background:var(--gray-100);border-radius:6px;height:8px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${gaugeColor};border-radius:6px;transition:width .8s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-400);margin-top:4px;">
+        <span>0점</span><span>${MAX_SCORE.toLocaleString()}점</span>
+      </div>
+    </div>
+
+    <!-- 인증 4대 요건 -->
+    <div>
+      <div style="font-size:12px;font-weight:700;color:var(--gray-700);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;">인증 4대 요건 (종합병원 기준)</div>
+      <div class="cert-req-grid">
+        <div class="cert-req-card ${cert.totalOk?'crc-ok':'crc-fail'}">
+          <div class="crc-header">
+            <span class="crc-icon">📊</span>
+            <span class="crc-title">전체 평균점수</span>
+            <span class="crc-status ${cert.totalOk?'status-ok':'status-fail'}">${cert.totalOk?'✓ 충족':'✗ 미충족'}</span>
+          </div>
+          <div class="crc-val">${ts.avg}점</div>
+          <div class="crc-desc">기준: 8.0점 이상 (현재 ${(ts.avg-8).toFixed(1)>=0?'+':''}${(ts.avg-8).toFixed(1)}점)</div>
+        </div>
+        <div class="cert-req-card ${cert.stdFail===0?'crc-ok':'crc-fail'}">
+          <div class="crc-header">
+            <span class="crc-icon">📋</span>
+            <span class="crc-title">기준별 5점 미만</span>
+            <span class="crc-status ${cert.stdFail===0?'status-ok':'status-fail'}">${cert.stdFail===0?'✓ 충족':'✗ 미충족'}</span>
+          </div>
+          <div class="crc-val">${cert.stdFail}개</div>
+          <div class="crc-desc">기준: 0개 (5점 미만 기준 ${cert.stdFail}개 해당)</div>
+        </div>
+        <div class="cert-req-card ${cert.chFail===0?'crc-ok':'crc-fail'}">
+          <div class="crc-header">
+            <span class="crc-icon">📂</span>
+            <span class="crc-title">장별 7점 미만</span>
+            <span class="crc-status ${cert.chFail===0?'status-ok':'status-fail'}">${cert.chFail===0?'✓ 충족':'✗ 미충족'}</span>
+          </div>
+          <div class="crc-val">${cert.chFail}개</div>
+          <div class="crc-desc">기준: 0개 (7점 미만 장 ${cert.chFail}개 해당)</div>
+        </div>
+        <div class="cert-req-card ${cert.reqDn===0?'crc-ok':'crc-fail'}">
+          <div class="crc-header">
+            <span class="crc-icon">⭐</span>
+            <span class="crc-title">필수항목 하</span>
+            <span class="crc-status ${cert.reqDn===0?'status-ok':'status-fail'}">${cert.reqDn===0?'✓ 충족':'✗ 탈락!'}</span>
+          </div>
+          <div class="crc-val">${cert.reqDn}개</div>
+          <div class="crc-desc">기준: 0개 (하 1개라도 탈락)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 요약 통계 4개 -->
+  <div class="mini-stat-row">
+    <div class="mini-stat ms-blue">
+      <div class="ms-val">${ts.tot.toLocaleString()}<span style="font-size:14px;font-weight:500">점</span></div>
+      <div class="ms-lbl">총 획득점수</div>
+      <div class="ms-sub">만점 ${MAX_SCORE.toLocaleString()}점</div>
+    </div>
+    <div class="mini-stat ms-green">
+      <div class="ms-val">${ts.up}</div>
+      <div class="ms-lbl">상 항목</div>
+      <div class="ms-sub">전체의 ${Math.round(ts.up/TOTAL_ITEMS*100)}%</div>
+    </div>
+    <div class="mini-stat ms-amber">
+      <div class="ms-val">${ts.mid}</div>
+      <div class="ms-lbl">중 항목</div>
+      <div class="ms-sub">개선 필요</div>
+    </div>
+    <div class="mini-stat ms-red">
+      <div class="ms-val">${ts.dn}</div>
+      <div class="ms-lbl">하 항목</div>
+      <div class="ms-sub">즉시 개선</div>
+    </div>
+  </div>
+
+  <!-- 장별 점수 차트 -->
+  <div class="chart-card">
+    <div class="chart-title">📊 장별 평균 점수 현황</div>
+    <canvas id="overviewBarChart" height="80"></canvas>
+  </div>`;
+
+  document.getElementById('overviewContent').innerHTML=html;
+
+  // 차트 그리기
+  const chs=[...new Set(DATA.map(s=>s.chapter))].sort((a,b)=>parseInt(a)-parseInt(b));
+  const labels=chs.map(ch=>`${ch}장 ${DATA.find(s=>s.chapter===ch)?.chapter_name||''}`);
+  const avgs=chs.map(ch=>parseFloat(getChStats(ch).avg));
+  const bgColors=avgs.map(a=>a>=9?'rgba(14,107,79,0.8)':a>=7?'rgba(26,95,168,0.8)':a>=5?'rgba(217,119,6,0.8)':'rgba(176,48,48,0.8)');
+
+  const ctx=document.getElementById('overviewBarChart').getContext('2d');
+  new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{label:'장별 평균점수',data:avgs,backgroundColor:bgColors,borderRadius:4}]},
+    options:{
+      responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`평균 ${ctx.parsed.y}점`}}},
+      scales:{
+        y:{min:0,max:10,ticks:{callback:v=>v+'점'},grid:{color:'rgba(0,0,0,0.05)'}},
+        x:{ticks:{font:{size:11}}}
+      },
+      annotation:{annotations:{line1:{type:'line',yMin:8,yMax:8,borderColor:'rgba(26,95,168,0.5)',borderWidth:1.5,borderDash:[4,4],label:{content:'인증기준 8점',display:true,position:'end',font:{size:10}}}}}
+    }
+  });
+}
+
+// ─── 탭3: 장별 분석 ───
+function renderChapter(){
+  const chs=[...new Set(DATA.map(s=>s.chapter))].sort((a,b)=>parseInt(a)-parseInt(b));
+  let html=`<div class="chapter-analysis-grid">`;
+  chs.forEach(ch=>{
+    const name=DATA.find(s=>s.chapter===ch)?.chapter_name||'';
+    const st=getChStats(ch);
+    const avg=parseFloat(st.avg);
+    const fc=avg>=9?'#0e6b4f':avg>=7?'#1a5fa8':avg>=5?'#d97706':'#b03030';
+    const fw=Math.round((avg/10)*100);
+    const stds=DATA.filter(s=>s.chapter===ch);
+    html+=`<div class="ch-analysis-card">
+      <div class="cac-head">
+        <span class="cac-num">${ch}장</span>
+        <span class="cac-name">${name}</span>
+        <span class="cac-score" style="color:${fc}">${st.avg}점</span>
+      </div>
+      <div class="cac-bar"><div class="cac-fill" style="width:${fw}%;background:${fc};"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gray-400);margin-bottom:8px;">
+        <span>기준 ${stds.length}개 · 항목 ${st.cnt}개</span>
+        <span>${st.tot}/${st.cnt*10}점</span>
+      </div>
+      <div class="cac-stats">
+        <span class="cac-stat s-up">상 ${st.cnt-st.mid-st.dn}</span>
+        ${st.mid>0?`<span class="cac-stat s-mid">중 ${st.mid}</span>`:''}
+        ${st.dn>0?`<span class="cac-stat s-dn">하 ${st.dn}</span>`:''}
+      </div>
+      ${st.reqDn>0?`<div class="cac-warn">🚨 필수항목 하 ${st.reqDn}개</div>`:''}
+      ${avg<7?`<div style="font-size:10px;color:var(--red);font-weight:700;margin-top:4px;">⚠ 장별 기준 7점 미달</div>`:''}
+    </div>`;
+  });
+  html+=`</div>
+  <div class="chart-card">
+    <div class="chart-title">📊 장별 상/중/하 분포</div>
+    <canvas id="chDistChart" height="70"></canvas>
+  </div>`;
+  document.getElementById('chapterContent').innerHTML=html;
+
+  const labels=chs.map(ch=>`${ch}장`);
+  const upData=chs.map(ch=>{const st=getChStats(ch);return st.cnt-st.mid-st.dn;});
+  const midData=chs.map(ch=>getChStats(ch).mid);
+  const dnData=chs.map(ch=>getChStats(ch).dn);
+  const ctx=document.getElementById('chDistChart').getContext('2d');
+  new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'상',data:upData,backgroundColor:'rgba(14,107,79,0.75)',borderRadius:3},
+        {label:'중',data:midData,backgroundColor:'rgba(217,119,6,0.75)',borderRadius:3},
+        {label:'하',data:dnData,backgroundColor:'rgba(176,48,48,0.75)',borderRadius:3}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{position:'top'}},
+      scales:{x:{stacked:true},y:{stacked:true,grid:{color:'rgba(0,0,0,0.05)'}}}
+    }
+  });
+}
+
+// ─── 탭4: 급등구간 ───
+function renderRisk(){
+  // 기준별 위험도 계산
+  const riskStds=[];
+  DATA.forEach(s=>{
+    let dnCnt=0,midCnt=0,reqDn=0;
+    s.items.forEach(i=>{
+      const v=scores[s.num+'_'+i.me]||'up';
+      if(v==='dn'){dnCnt++;if(i.grade==='필수')reqDn++;}
+      if(v==='mid')midCnt++;
+    });
+    if(dnCnt>0||midCnt>0){
+      riskStds.push({...s,dnCnt,midCnt,reqDn,riskScore:reqDn*1000+dnCnt*10+midCnt});
+    }
+  });
+  riskStds.sort((a,b)=>b.riskScore-a.riskScore);
+
+  // 장별 집중도
+  const chRisk={};
+  DATA.forEach(s=>s.items.forEach(i=>{
+    const v=scores[s.num+'_'+i.me]||'up';
+    if(v==='dn'||v==='mid'){
+      if(!chRisk[s.chapter])chRisk[s.chapter]={ch:s.chapter,name:s.chapter_name,dn:0,mid:0,req:0};
+      if(v==='dn'){chRisk[s.chapter].dn++;if(i.grade==='필수')chRisk[s.chapter].req++;}
+      if(v==='mid')chRisk[s.chapter].mid++;
+    }
+  }));
+  const chRiskArr=Object.values(chRisk).sort((a,b)=>(b.req*100+b.dn*10+b.mid)-(a.req*100+a.dn*10+a.mid));
+
+  if(riskStds.length===0){
+    document.getElementById('riskContent').innerHTML=`<div class="empty-state"><div class="es-icon">✅</div><div class="es-text">급등 구간 없음</div><div class="es-sub">현재 모든 항목이 상으로 입력되어 있습니다</div></div>`;
+    return;
+  }
+
+  let html=``;
+
+  // 장별 위험 집중도
+  if(chRiskArr.length>0){
+    html+=`<div class="card" style="margin-bottom:16px;">
+      <div class="card-title"><span class="ct-icon">🗺</span> 장별 위험 집중도</div>
+      <table class="risk-table">
+        <thead><tr><th>장</th><th>하 항목</th><th>중 항목</th><th>필수 하</th><th>위험도</th></tr></thead>
+        <tbody>`;
+    chRiskArr.forEach(c=>{
+      const riskLv=c.req>0?'pb-critical':c.dn>0?'pb-high':'pb-mid';
+      const riskTxt=c.req>0?'🚨 탈락위험':c.dn>0?'⚠ 높음':'보통';
+      html+=`<tr>
+        <td><strong>${c.ch}장 ${c.name}</strong></td>
+        <td>${c.dn>0?`<span class="score-pill pill-dn">${c.dn}개</span>`:'—'}</td>
+        <td>${c.mid>0?`<span class="score-pill pill-mid">${c.mid}개</span>`:'—'}</td>
+        <td>${c.req>0?`<span class="score-pill pill-req">${c.req}개</span>`:'—'}</td>
+        <td><span class="priority-badge ${riskLv}">${riskTxt}</span></td>
+      </tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }
+
+  // 기준별 상세
+  html+=`<div class="card">
+    <div class="card-title"><span class="ct-icon">⚠</span> 기준별 미흡 집중 구간 (중/하 포함 기준 순)</div>
+    <table class="risk-table">
+      <thead><tr><th>기준</th><th>기준명</th><th>하</th><th>중</th><th>필수하</th><th>우선순위</th></tr></thead>
+      <tbody>`;
+  riskStds.forEach(s=>{
+    const lv=s.reqDn>0?'pb-critical':s.dnCnt>0?'pb-high':'pb-mid';
+    const txt=s.reqDn>0?'🚨 즉시':s.dnCnt>0?'⚠ 높음':'보통';
+    html+=`<tr>
+      <td><span class="rt-std">기준 ${s.num}</span></td>
+      <td style="max-width:300px;">${s.title}</td>
+      <td>${s.dnCnt>0?`<span class="score-pill pill-dn">${s.dnCnt}개</span>`:'—'}</td>
+      <td>${s.midCnt>0?`<span class="score-pill pill-mid">${s.midCnt}개</span>`:'—'}</td>
+      <td>${s.reqDn>0?`<span class="score-pill pill-req">${s.reqDn}개</span>`:'—'}</td>
+      <td><span class="priority-badge ${lv}">${txt}</span></td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  document.getElementById('riskContent').innerHTML=html;
+}
+
+// ─── 탭5: 개선과제 ───
+let _improveFilter='all';
+function renderImprove(filter){
+  _improveFilter=filter;
+  const items=[];
+  DATA.forEach(s=>s.items.forEach(i=>{
+    const k=s.num+'_'+i.me, v=scores[k]||'up';
+    if(v==='mid'||v==='dn'){
+      items.push({stdNum:s.num,stdTitle:s.title,ch:s.chapter,chName:s.chapter_name,me:i.me,text:i.text,type:i.type,grade:i.grade,val:v,score:getScoreVal(k)});
+    }
+  }));
+
+  const filtered=filter==='all'?items:filter==='dn'?items.filter(i=>i.val==='dn'):filter==='req'?items.filter(i=>i.grade==='필수'):items.filter(i=>i.val==='mid');
+  filtered.sort((a,b)=>{
+    const pa=a.grade==='필수'&&a.val==='dn'?0:a.val==='dn'?1:a.grade==='필수'?2:3;
+    const pb=b.grade==='필수'&&b.val==='dn'?0:b.val==='dn'?1:b.grade==='필수'?2:3;
+    return pa-pb;
+  });
+
+  const dnCnt=items.filter(i=>i.val==='dn').length;
+  const midCnt=items.filter(i=>i.val==='mid').length;
+  const reqDn=items.filter(i=>i.grade==='필수'&&i.val==='dn').length;
+
+  let html=`<div class="improve-header">
+    <div style="flex:1;">
+      <div style="font-size:14px;font-weight:800;color:var(--gray-900);">개선과제 목록</div>
+      <div style="font-size:12px;color:var(--gray-500);margin-top:2px;">하 ${dnCnt}개 · 중 ${midCnt}개 · 필수항목 하 ${reqDn}개</div>
+    </div>
+    <div class="filter-btns">
+      <button class="filter-btn ${filter==='all'?'active':''}" onclick="renderImprove('all')">전체 ${items.length}</button>
+      <button class="filter-btn ${filter==='req'?'active':''}" style="${filter==='req'?'':'border-color:#fee2e2;color:#b03030;'}" onclick="renderImprove('req')">필수 하 ${reqDn}</button>
+      <button class="filter-btn ${filter==='dn'?'active':''}" style="${filter==='dn'?'':'border-color:var(--red-lt);color:var(--red);'}" onclick="renderImprove('dn')">하 ${dnCnt}</button>
+      <button class="filter-btn ${filter==='mid'?'active':''}" style="${filter==='mid'?'':'border-color:var(--amber-lt);color:var(--amber);'}" onclick="renderImprove('mid')">중 ${midCnt}</button>
+    </div>
+  </div>`;
+
+  if(filtered.length===0){
+    html+=`<div class="empty-state"><div class="es-icon">🎉</div><div class="es-text">해당 항목 없음</div><div class="es-sub">모든 항목이 양호합니다</div></div>`;
+  } else {
+    html+=`<div class="card" style="padding:0;overflow:hidden;">
+      <table class="improve-table">
+        <thead><tr><th>#</th><th>기준</th><th>ME</th><th>항목 내용</th><th>등급</th><th>유형</th><th>결과</th><th>점수</th><th>우선순위</th></tr></thead>
+        <tbody>`;
+    filtered.forEach((item,idx)=>{
+      const lv=item.grade==='필수'&&item.val==='dn'?'pb-critical':item.val==='dn'?'pb-high':'pb-mid';
+      const txt=item.grade==='필수'&&item.val==='dn'?'🚨 즉시개선':item.val==='dn'?'⚠ 우선개선':'보통';
+      const gc=item.grade==='필수'?'gp-req':item.grade==='시범'?'gp-test':'gp-reg';
+      const tc=item.type==='S'?'type-s':item.type==='P'?'type-p':'type-o';
+      const sc=item.val==='dn'?'pill-dn':'pill-mid';
+      html+=`<tr>
+        <td style="color:var(--gray-400);font-size:12px;">${idx+1}</td>
+        <td><span class="rt-std">기준 ${item.stdNum}</span><br><span style="font-size:10px;color:var(--gray-500);">${item.chName}</span></td>
+        <td><span class="rt-me">ME.${item.me}</span></td>
+        <td style="max-width:280px;font-size:12px;">${item.text}</td>
+        <td><span class="grade-pill ${gc}">${item.grade}</span></td>
+        <td><span class="me-type ${tc}">${item.type}</span></td>
+        <td><span class="score-pill ${sc}">${item.val==='dn'?'하':'중'}</span></td>
+        <td style="font-weight:800;color:${item.val==='dn'?'var(--red)':'var(--amber)'};">${item.score}점</td>
+        <td><span class="priority-badge ${lv}">${txt}</span></td>
+      </tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  }
+  document.getElementById('improveContent').innerHTML=html;
+}
+
+// ─── 저장/불러오기 ───
+function updateHospitalName(){
+  // 헤더 서브에 병원명 반영은 자동
+}
+
+function saveJSON(){
+  const ts=getTotStats();
+  const hn=document.getElementById('hospitalName')?.value||'';
+  const data={version:2,savedAt:new Date().toISOString(),hospitalName:hn,totalScore:ts.tot,maxScore:MAX_SCORE,avg:ts.avg,scores};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`인증조사_${hn||'점수입력'}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  showToast('저장 완료!');
+}
+
+function loadJSON(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(d.scores){
+        Object.assign(scores,d.scores);
+        if(d.hospitalName){const inp=document.getElementById('hospitalName');if(inp)inp.value=d.hospitalName;}
+        if(curCh)showInputChapter(curCh);
+        else renderChapterList();
+        updateDangerBanner();
+        showToast('불러오기 완료!');
+      }
+    }catch(err){alert('파일 오류');}
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+function exportReport(){
+  const ts=getTotStats();
+  const chs=[...new Set(DATA.map(s=>s.chapter))].sort((a,b)=>parseInt(a)-parseInt(b));
+  const chData=chs.map(ch=>{const st=getChStats(ch);const name=DATA.find(s=>s.chapter===ch)?.chapter_name||'';return{ch,name,...st};});
+  const weakItems=[];
+  DATA.forEach(s=>s.items.forEach(i=>{
+    const k=s.num+'_'+i.me,v=scores[k]||'up';
+    if(v==='mid'||v==='dn')weakItems.push({stdNum:s.num,stdTitle:s.title,ch:s.chapter,chName:s.chapter_name,me:i.me,text:i.text,type:i.type,grade:i.grade,score:getScoreVal(k),val:v});
+  }));
+  const hn=document.getElementById('hospitalName')?.value||'';
+  const data={version:2,savedAt:new Date().toISOString(),hospitalName:hn,totalScore:ts.tot,maxScore:MAX_SCORE,totalAvg:parseFloat(ts.avg),totalItems:TOTAL_ITEMS,midCount:ts.mid,dnCount:ts.dn,reqDnCount:ts.reqDn,chData,weakItems,scores};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`인증조사_보고용_${hn||'병원'}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  showToast('보고용 파일 내보내기 완료!');
+}
+
+// ─── 자동저장 ───
+let _autoTimer=null;
+function autoSave(){
+  clearTimeout(_autoTimer);
+  _autoTimer=setTimeout(()=>{
+    try{
+      const hn=document.getElementById('hospitalName')?.value||'';
+      localStorage.setItem('cert4_autosave',JSON.stringify({version:2,savedAt:new Date().toISOString(),hospitalName:hn,scores}));
+    }catch(e){}
+  },2000);
+}
+
+function checkAutoSave(){
+  try{
+    const raw=localStorage.getItem('cert4_autosave');
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    if(!d.scores)return;
+    const changed=Object.values(d.scores).filter(v=>v!=='up').length;
+    if(changed===0)return;
+    if(confirm(`자동저장된 데이터가 있습니다.\n(${new Date(d.savedAt).toLocaleString('ko-KR')}, 변경항목 ${changed}개)\n\n불러올까요?`)){
+      Object.assign(scores,d.scores);
+      if(d.hospitalName){const inp=document.getElementById('hospitalName');if(inp)inp.value=d.hospitalName;}
+      renderChapterList();
+      updateDangerBanner();
+      showToast('자동저장 불러오기 완료');
+    }
+  }catch(e){}
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function resetAll(){
+  if(!confirm('모든 점수를 초기화(전체 상)하시겠습니까?'))return;
+  Object.keys(scores).forEach(k=>delete scores[k]);
+  initScores();
+  if(curCh)showInputChapter(curCh);
+  else renderChapterList();
+  updateDangerBanner();
+  showToast('초기화 완료');
+}
+
+// ─── 초기 실행 ───
+initScores();
+checkAutoSave();
+renderChapterList();
+updateDangerBanner();
+</script>
+</body>
+</html>
