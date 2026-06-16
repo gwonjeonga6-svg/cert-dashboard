@@ -400,11 +400,27 @@ function renderReport(d) {
 
   // 인증 요건
   let stdFail=0, chFail=0;
-  Object.values(stdMap).forEach(items => {
-    const avg = items.reduce((a,i)=>a+getScoreVal(i.val),0)/items.length;
-    if(avg < 5) stdFail++;
-  });
-  CHAPTERS.forEach(c => { if(chAvgs[c.ch].avg < 7) chFail++; });
+  if(d.chData && d.chData.length > 0){
+    // chData에서 기준별 평균 계산 불가 → scores에서 직접 계산
+    const stdMapTemp = {};
+    Object.keys(scores).forEach(k => {
+      const parts = k.split('_');
+      const me = parseInt(parts.pop());
+      const stdNum = parts.join('.');
+      if(!stdMapTemp[stdNum]) stdMapTemp[stdNum] = [];
+      stdMapTemp[stdNum].push({ me, val: scores[k] });
+    });
+    Object.values(stdMapTemp).forEach(items => {
+      const avg = items.reduce((a,i)=>a+getScoreVal(i.val),0)/items.length;
+      if(avg < 5) stdFail++;
+    });
+  } else if(typeof stdMap !== 'undefined') {
+    Object.values(stdMap).forEach(items => {
+      const avg = items.reduce((a,i)=>a+getScoreVal(i.val),0)/items.length;
+      if(avg < 5) stdFail++;
+    });
+  }
+  CHAPTERS.forEach(c => { if(chAvgs[c.ch] && chAvgs[c.ch].avg < 7) chFail++; });
   const canCert = parseFloat(totAvg)>=8 && stdFail===0 && chFail===0 && totReqDn===0;
   const avgN = parseFloat(totAvg);
   const scoreColor = avgN>=9?'#34d399':avgN>=8?'#60a5fa':avgN>=7?'#fbbf24':'#f87171';
